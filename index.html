@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Selection Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="main.css">
+</head>
+<body class="bg-gray-100 min-h-screen p-4">
+    <div class="max-w-4xl mx-auto bg-white rounded-lg shadow-md p-6">
+        <h1 class="text-2xl font-bold text-center mb-4">圖片圈選工具</h1>
+
+        <!-- 控制區域 -->
+        <div class="mb-4 flex flex-wrap items-center gap-4">
+            <div>
+                <label for="imageUpload" class="block mb-1 font-medium">上傳圖片:</label>
+                <input type="file" id="imageUpload" accept="image/*" class="block w-full border border-gray-300 rounded p-2">
+            </div>
+            
+            <div>
+                <label class="block mb-1 font-medium">選擇形狀:</label>
+                <div class="flex gap-2">
+                    <button id="rectangleBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded active">矩形</button>
+                    <button id="circleBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-full">圓形</button>
+                </div>
+            </div>
+
+            <div class="ml-auto">
+                <button id="finishBtn" class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded">完成</button>
+                <button id="resetBtn" class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded ml-2">重置</button>
+            </div>
+        </div>
+
+        <!-- 圖片和選擇區域容器 -->
+        <div id="imageContainer" class="relative border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center min-h-[300px] overflow-hidden">
+            <p id="placeholderText" class="text-gray-500 text-center">請上傳圖片</p>
+            <img id="uploadedImage" class="max-w-full max-h-[70vh] hidden" alt="上傳的圖片">
+            <div id="selectionsContainer" class="absolute top-0 left-0 w-full h-full pointer-events-none"></div>
+        </div>
+
+        <!-- 已選擇的區域列表 -->
+        <div class="mt-6">
+            <h2 class="text-xl font-semibold mb-2">已選擇的區域:</h2>
+            <div id="selectionsList" class="border border-gray-300 rounded-lg p-4 min-h-[100px]">
+                <p id="noSelectionsText" class="text-gray-500">尚未有選擇的區域</p>
+            </div>
+        </div>
+
+        <!-- 輸出結果 -->
+        <div class="mt-6">
+            <h2 class="text-xl font-semibold mb-2">輸出結果:</h2>
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-sm text-gray-500">HTML 代碼</span>
+                <button id="copyCodeBtn" class="bg-gray-500 hover:bg-gray-600 text-white px-3 py-1 rounded text-sm flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                    </svg>
+                    複製代碼
+                </button>
+            </div>
+            <pre id="outputResult" class="bg-gray-100 p-4 rounded-lg overflow-x-auto text-sm"></pre>
+        </div>
+
+        <!-- 預覽功能 -->
+        <div class="mt-6">
+            <h2 class="text-xl font-semibold mb-2">預覽效果:</h2>
+            <div class="flex gap-2 mb-4">
+                <button id="previewBtn" class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded">顯示預覽</button>
+                <button id="copyFullCodeBtn" class="bg-indigo-500 hover:bg-indigo-600 text-white px-4 py-2 rounded flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6M8 7V5a2 2 0 012-2h4.586a1 1 0 01.707.293l4.414 4.414a1 1 0 01.293.707V15a2 2 0 01-2 2h-2M8 7H6a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2v-2" />
+                    </svg>
+                    複製圖片與選區代碼
+                </button>
+            </div>
+            <div id="previewContainer" class="relative border border-gray-300 rounded-lg hidden overflow-hidden">
+                <div class="flex justify-center">
+                    <div class="relative">
+                        <img id="previewImage" class="max-w-full max-h-[70vh]" alt="預覽圖片">
+                        <div id="previewSelections" class="absolute top-0 left-0 w-full h-full"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="main.js"></script>
+</body>
+</html>
