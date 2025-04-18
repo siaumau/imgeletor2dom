@@ -33,6 +33,29 @@ document.addEventListener('DOMContentLoaded', function() {
     let imageWidth, imageHeight;
     let currentSelectionId = 1;
 
+    // 添加編輯說明的函數
+    function editDescriptionInternal(element) {
+        const selectionId = element.id;
+        const selection = selections.find(s => s.id === selectionId);
+        const currentDescription = selection.description || '';
+        
+        const description = prompt('請輸入此區域的說明：', currentDescription);
+        if (description !== null) {
+            selection.description = description;
+            element.setAttribute('data-description', description);
+            updateSelectionsList();
+            updateOutputResult();
+        }
+    }
+
+    // 暴露給全局的編輯說明函數
+    window.editDescription = function(elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            editDescriptionInternal(element);
+        }
+    };
+
     // 監聽圖片上傳
     imageUpload.addEventListener('change', function(e) {
         const file = e.target.files[0];
@@ -150,8 +173,13 @@ document.addEventListener('DOMContentLoaded', function() {
             const percentWidth = (selection.width * 100).toFixed(2);
             const percentHeight = (selection.height * 100).toFixed(2);
             
-            return `<div id="${selection.id}" 
-                      data-name="${selection.name}" 
+            let attributes = `id="${selection.id}" data-name="${selection.name}"`;
+            
+            if (selection.description) {
+                attributes += ` data-description="${selection.description}"`;
+            }
+            
+            return `<div ${attributes} 
                       class="absolute ${selection.shape === 'circle' ? 'rounded-full' : ''}" 
                       style="left: ${percentLeft}%; top: ${percentTop}%; width: ${percentWidth}%; height: ${percentHeight}%;">
                   </div>`;
@@ -212,7 +240,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 處理刪除按鈕點擊
         if (target.classList.contains('delete-btn')) {
-            deleteSelection(target.parentElement);
+            deleteSelectionInternal(target.parentElement);
             return;
         }
         
@@ -554,7 +582,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // 刪除選區
-    function deleteSelection(element) {
+    function deleteSelectionInternal(element) {
         const id = element.id;
         const index = selections.findIndex(sel => sel.id === id);
         
@@ -566,53 +594,52 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // 暴露刪除功能到全局
+    window.deleteSelection = function(elementId) {
+        const element = typeof elementId === 'string' ? document.getElementById(elementId) : elementId;
+        if (element) {
+            deleteSelectionInternal(element);
+        }
+    };
+
     // 更新選區列表顯示
     function updateSelectionsList() {
         if (selections.length === 0) {
             noSelectionsText.classList.remove('hidden');
             selectionsList.innerHTML = '';
-            selectionsList.appendChild(noSelectionsText);
             return;
         }
         
         noSelectionsText.classList.add('hidden');
-        selectionsList.innerHTML = '';
-        
-        selections.forEach(selection => {
-            const item = document.createElement('div');
-            item.className = 'selection-list-item';
-            
-            const colorIndicator = document.createElement('span');
-            colorIndicator.className = 'selection-color-indicator';
-            colorIndicator.style.backgroundColor = 'rgba(0, 123, 255, 0.6)';
-            colorIndicator.style.borderRadius = selection.shape === 'circle' ? '50%' : '3px';
-            
-            const info = document.createElement('div');
-            info.className = 'selection-info';
-            
+        selectionsList.innerHTML = selections.map(selection => {
             const percentLeft = (selection.left * 100).toFixed(2);
             const percentTop = (selection.top * 100).toFixed(2);
             const percentWidth = (selection.width * 100).toFixed(2);
             const percentHeight = (selection.height * 100).toFixed(2);
             
-            info.innerHTML = `
-                <strong>${selection.name}</strong> (${selection.shape})<br>
-                位置: ${percentLeft}%, ${percentTop}% | 尺寸: ${percentWidth}%, ${percentHeight}%
+            return `
+                <div class="selection-item bg-white p-4 rounded-lg shadow mb-4">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="font-semibold text-lg">${selection.id}</h3>
+                            <p class="text-sm text-gray-600">
+                                位置: 左${percentLeft}% 上${percentTop}%<br>
+                                尺寸: 寬${percentWidth}% 高${percentHeight}%
+                            </p>
+                            ${selection.description ? `<p class="text-sm text-gray-800 mt-2">說明: ${selection.description}</p>` : ''}
+                        </div>
+                        <div class="space-x-2">
+                            <button onclick="editDescription('${selection.id}')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
+                                編輯說明
+                            </button>
+                            <button onclick="deleteSelection('${selection.id}')" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
+                                刪除
+                            </button>
+                        </div>
+                    </div>
+                </div>
             `;
-            
-            const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-sm';
-            deleteBtn.textContent = '刪除';
-            deleteBtn.onclick = function() {
-                deleteSelection(selection.elementRef);
-            };
-            
-            item.appendChild(colorIndicator);
-            item.appendChild(info);
-            item.appendChild(deleteBtn);
-            
-            selectionsList.appendChild(item);
-        });
+        }).join('');
         
         updateOutputResult();
         
@@ -674,20 +701,21 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const outputHTML = selections.map(selection => {
+        const selectionsCode = selections.map(selection => {
             const percentLeft = (selection.left * 100).toFixed(2);
             const percentTop = (selection.top * 100).toFixed(2);
             const percentWidth = (selection.width * 100).toFixed(2);
             const percentHeight = (selection.height * 100).toFixed(2);
             
-            return `<div id="${selection.id}" 
-                      data-name="${selection.name}" 
-                      class="absolute ${selection.shape === 'circle' ? 'rounded-full' : ''}" 
-                      style="left: ${percentLeft}%; top: ${percentTop}%; width: ${percentWidth}%; height: ${percentHeight}%;">
-                  </div>`;
+            let attributes = `id="${selection.id}" style="left: ${percentLeft}%; top: ${percentTop}%; width: ${percentWidth}%; height: ${percentHeight}%;"`;
+            if (selection.description) {
+                attributes += ` data-description="${selection.description}"`;
+            }
+            
+            return `<div ${attributes} class="absolute ${selection.shape === 'circle' ? 'rounded-full' : ''}"></div>`;
         }).join('\n');
         
-        outputResult.textContent = outputHTML;
+        outputResult.textContent = selectionsCode;
         
         // 如果預覽已經開啟，更新預覽內容
         if (!previewContainer.classList.contains('hidden') && previewImage.src) {
