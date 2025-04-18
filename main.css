@@ -471,3 +471,38 @@ body.drawing-mode #imageContainer.polygon-active {
     border-radius: 3px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
+
+/* 形狀選擇按鈕樣式 */
+.shape-btn {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.shape-btn.active {
+    background-color: #8b5cf6 !important; /* 紫色 */
+    box-shadow: 0 4px 8px rgba(139, 92, 246, 0.3);
+    transform: translateY(-1px);
+}
+
+.shape-btn:not(.active) {
+    background-color: #9ca3af !important; /* 灰色 */
+}
+
+.shape-btn:not(.active):hover {
+    background-color: #6b7280 !important; /* 暗灰色 */
+    transform: translateY(-1px);
+}
+
+.shape-btn:active {
+    transform: translateY(1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.shape-btn i {
+    transition: transform 0.2s ease;
+}
+
+.shape-btn:hover i {
+    transform: scale(1.2);
+}

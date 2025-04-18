@@ -64,13 +64,25 @@ document.addEventListener('DOMContentLoaded', function() {
         const currentId = selection.name;
         
         const newId = prompt('請輸入新的 ID 名稱：', currentId);
-        if (newId !== null && newId.trim() !== '') {
+        if (newId !== null && newId.trim() !== '' && newId.trim() !== currentId) {
             const trimmedId = newId.trim();
+            
+            // 檢查ID是否包含空格或特殊字符
+            if (/[\s\(\)\[\]\{\}\<\>\,\.\/\\\?\;\:\'\"\!\@\#\$\%\^\&\*\=\+\`\~]/.test(trimmedId)) {
+                alert("ID不能包含空格或特殊字符，只能使用字母、數字、連字符和下劃線。");
+                return;
+            }
+            
+            // 更新選區物件中的名稱
             selection.name = trimmedId;
+            
+            // 更新顯示標籤的文字
             const label = element.querySelector('.selection-label');
             if (label) {
                 label.textContent = trimmedId;
             }
+            
+            // 更新選區列表和輸出結果
             updateSelectionsList();
             updateOutputResult();
         }
@@ -124,9 +136,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // 切換形狀按鈕
     rectangleBtn.addEventListener('click', function() {
         currentShape = 'rectangle';
-        rectangleBtn.classList.add('active');
-        circleBtn.classList.remove('active');
-        polygonBtn.classList.remove('active');
+        
+        // 更新按鈕樣式
+        rectangleBtn.classList.remove('bg-gray-400');
+        rectangleBtn.classList.add('bg-purple-500', 'active');
+        
+        circleBtn.classList.remove('bg-purple-500', 'active');
+        circleBtn.classList.add('bg-gray-400');
+        
+        polygonBtn.classList.remove('bg-purple-500', 'active');
+        polygonBtn.classList.add('bg-gray-400');
+        
         resetPolygonDrawing();
         
         // 隱藏多邊形提示
@@ -140,9 +160,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     circleBtn.addEventListener('click', function() {
         currentShape = 'circle';
-        circleBtn.classList.add('active');
-        rectangleBtn.classList.remove('active');
-        polygonBtn.classList.remove('active');
+        
+        // 更新按鈕樣式
+        circleBtn.classList.remove('bg-gray-400');
+        circleBtn.classList.add('bg-purple-500', 'active');
+        
+        rectangleBtn.classList.remove('bg-purple-500', 'active');
+        rectangleBtn.classList.add('bg-gray-400');
+        
+        polygonBtn.classList.remove('bg-purple-500', 'active');
+        polygonBtn.classList.add('bg-gray-400');
+        
         resetPolygonDrawing();
         
         // 隱藏多邊形提示
@@ -156,9 +184,17 @@ document.addEventListener('DOMContentLoaded', function() {
     
     polygonBtn.addEventListener('click', function() {
         currentShape = 'polygon';
-        polygonBtn.classList.add('active');
-        rectangleBtn.classList.remove('active');
-        circleBtn.classList.remove('active');
+        
+        // 更新按鈕樣式
+        polygonBtn.classList.remove('bg-gray-400');
+        polygonBtn.classList.add('bg-purple-500', 'active');
+        
+        rectangleBtn.classList.remove('bg-purple-500', 'active');
+        rectangleBtn.classList.add('bg-gray-400');
+        
+        circleBtn.classList.remove('bg-purple-500', 'active');
+        circleBtn.classList.add('bg-gray-400');
+        
         resetPolygonDrawing();
         
         // 添加多邊形繪製提示
@@ -189,8 +225,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const { cssCode, htmlCode } = generateSelectionCode();
-        outputResult.textContent = cssCode + htmlCode;
+        const { cssCode, htmlCode, jsCode } = generateSelectionCode();
+        outputResult.textContent = cssCode + htmlCode + jsCode;
         outputResult.parentElement.classList.remove('hidden');
         
         // 滾動到代碼區域
@@ -375,31 +411,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // 如果不在繪圖模式下，則不創建新選區
-        if (!isDrawing) {
-            // 取消所有選中的選區
-            document.querySelectorAll('.selection-area').forEach(el => {
-                el.classList.remove('selected');
-            });
-            selectedElement = null;
-            return;
-        }
-        
-        // 判斷是否已經選中元素或正在進行調整大小的操作
-        if (selectedElement || isResizing) {
-            // 先取消當前選中的元素
-            selectedElement = null;
-            isResizing = false;
-            resizeHandle = null;
-            
-            // 移除所有相關的樣式類
-            document.body.classList.remove('dragging', 'resizing');
-            
-            // 在繪圖模式下，點擊了不相關的區域，則不立即創建新選區
-            // 而是等待下一次點擊
-            return;
-        }
-        
         const rect = imageContainer.getBoundingClientRect();
         const offsetX = e.clientX - rect.left;
         const offsetY = e.clientY - rect.top;
@@ -423,6 +434,7 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
+        // 開始矩形或圓形繪製
         isDrawing = true;
         startX = offsetX;
         startY = offsetY;
@@ -643,7 +655,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // 獲取多邊形的邊界
-        let minX = Infinity, minY = Infinity, maxX = 0, maxY = 0;
+        let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         polygonPoints.forEach(point => {
             minX = Math.min(minX, point.x);
             minY = Math.min(minY, point.y);
@@ -651,36 +663,40 @@ document.addEventListener('DOMContentLoaded', function() {
             maxY = Math.max(maxY, point.y);
         });
         
+        // 確保有效的寬度和高度
+        const width = Math.max(10, maxX - minX);
+        const height = Math.max(10, maxY - minY);
+        
         // 計算相對於圖片的百分比
         const imgWidth = imgRect.width;
         const imgHeight = imgRect.height;
         
         const relativeLeft = minX / imgWidth;
         const relativeTop = minY / imgHeight;
-        const relativeWidth = (maxX - minX) / imgWidth;
-        const relativeHeight = (maxY - minY) / imgHeight;
+        const relativeWidth = width / imgWidth;
+        const relativeHeight = height / imgHeight;
         
         // 調整多邊形坐標相對於新的邊界
         const adjustedPoints = polygonPoints.map(point => {
             return {
-                x: (point.x - minX) / (maxX - minX) * 100,
-                y: (point.y - minY) / (maxY - minY) * 100
+                x: Number(((point.x - minX) / width * 100).toFixed(2)),
+                y: Number(((point.y - minY) / height * 100).toFixed(2))
             };
         });
         
         // 更新多邊形位置和大小
         currentPolygonElement.style.left = (imgRect.left - containerRect.left + minX) + 'px';
         currentPolygonElement.style.top = (imgRect.top - containerRect.top + minY) + 'px';
-        currentPolygonElement.style.width = (maxX - minX) + 'px';
-        currentPolygonElement.style.height = (maxY - minY) + 'px';
+        currentPolygonElement.style.width = width + 'px';
+        currentPolygonElement.style.height = height + 'px';
         
         // 更新SVG和多邊形大小
-        svg.setAttribute('width', maxX - minX);
-        svg.setAttribute('height', maxY - minY);
+        svg.setAttribute('width', width);
+        svg.setAttribute('height', height);
         
         // 更新多邊形路徑
         const polygon = svg.querySelector('polygon');
-        const pointsString = adjustedPoints.map(p => `${p.x}%,${p.y}%`).join(' ');
+        const pointsString = adjustedPoints.map(p => `${p.x},${p.y}`).join(' ');
         polygon.setAttribute('points', pointsString);
         
         // 現在添加刪除按鈕和標籤
@@ -1065,8 +1081,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 創建選區預覽元素
         selections.forEach(selection => {
             const previewElement = document.createElement('div');
-            const id = selection.id.replace('selection-', '');
-            previewElement.id = 'preview-element-' + id;
+            previewElement.id = selection.name + '-preview';
             previewElement.className = 'preview-selection';
             
             // 設置基本樣式
@@ -1081,9 +1096,14 @@ document.addEventListener('DOMContentLoaded', function() {
             // 設置形狀特定的樣式
             if (selection.shape === 'circle') {
                 previewElement.style.borderRadius = '50%';
-            } else if (selection.shape === 'polygon') {
-                const clipPath = `polygon(${selection.polygonPoints.map(p => `${p.x}% ${p.y}%`).join(', ')})`;
-                previewElement.style.clipPath = clipPath;
+            } else if (selection.shape === 'polygon' && selection.polygonPoints) {
+                try {
+                    // 確保多邊形點位格式正確
+                    const clipPath = `polygon(${selection.polygonPoints.map(p => `${p.x}% ${p.y}%`).join(', ')})`;
+                    previewElement.style.clipPath = clipPath;
+                } catch (e) {
+                    console.error('Error setting clip-path:', e);
+                }
             }
             
             // 添加懸停效果
@@ -1117,8 +1137,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const { cssCode, htmlCode } = generateSelectionCode();
-        outputResult.textContent = cssCode + htmlCode;
+        const { cssCode, htmlCode, jsCode } = generateSelectionCode();
+        outputResult.textContent = cssCode + htmlCode + jsCode;
         
         // 如果預覽已經開啟，更新預覽內容
         if (!previewContainer.classList.contains('hidden') && previewImage.src) {
@@ -1214,10 +1234,10 @@ document.addEventListener('DOMContentLoaded', function() {
         selections.forEach(selection => {
             const id = selection.id.replace('selection-', '');
             
-            // 為每個選區創建CSS
+            // 使用 ID 選擇器而非 class 選擇器
             cssCode += `
 /* ${selection.name} ${selection.description ? '- ' + selection.description : ''} */
-.selection-area-${id} {
+#${selection.name} {
     position: absolute;
     left: ${(selection.left * 100).toFixed(2)}%;
     top: ${(selection.top * 100).toFixed(2)}%;
@@ -1229,8 +1249,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // 添加形狀特定的CSS
             if (selection.shape === 'circle') {
                 cssCode += `    border-radius: 50%;\n`;
-            } else if (selection.shape === 'polygon') {
-                const clipPath = `polygon(${selection.polygonPoints.map(p => `${p.x.toFixed(2)}% ${p.y.toFixed(2)}%`).join(', ')})`;
+            } else if (selection.shape === 'polygon' && selection.polygonPoints) {
+                const clipPath = `polygon(${selection.polygonPoints.map(p => `${p.x}% ${p.y}%`).join(', ')})`;
                 cssCode += `    clip-path: ${clipPath};\n`;
             }
 
@@ -1239,16 +1259,25 @@ document.addEventListener('DOMContentLoaded', function() {
     transition: background-color 0.3s ease;
 }
 
-.selection-area-${id}:hover {
+#${selection.name}:hover {
     background-color: rgba(0, 123, 255, 0.5);
 }
 `;
 
-            // 創建HTML元素
-            htmlCode += `<div class="selection-area-${id}" onclick="alert('點擊了: ${selection.name.replace(/'/g, "\\'")}${selection.description ? ' - ' + selection.description.replace(/'/g, "\\'") : ''}');"></div>\n`;
+            // 創建HTML元素 - 使用ID而非class
+            htmlCode += `<div id="${selection.name}" ${selection.description ? `data-description="${selection.description.replace(/"/g, '&quot;')}"` : ''} onclick="handleAreaClick(this);"></div>\n`;
         });
+        
+        // 添加交互式JS
+        let jsCode = `
+<script>
+function handleAreaClick(element) {
+    alert('點擊了: ' + element.id + (element.dataset.description ? ' - ' + element.dataset.description : ''));
+}
+</script>
+`;
 
-        return { cssCode, htmlCode };
+        return { cssCode, htmlCode, jsCode };
     }
     
     function generateFullCode() {
@@ -1269,10 +1298,9 @@ document.addEventListener('DOMContentLoaded', function() {
         code += '            display: block;\n';
         code += '        }\n';
         
-        // 添加個別選擇區的樣式
+        // 添加個別選擇區的樣式 - 使用ID
         selections.forEach(selection => {
-            const id = selection.id.replace('selection-', '');
-            code += `        #element${id} {\n`;
+            code += `        #${selection.name} {\n`;
             code += `            position: absolute;\n`;
             code += `            left: ${(selection.left * 100).toFixed(2)}%;\n`;
             code += `            top: ${(selection.top * 100).toFixed(2)}%;\n`;
@@ -1282,8 +1310,8 @@ document.addEventListener('DOMContentLoaded', function() {
             // 根據形狀添加對應的CSS
             if (selection.shape === 'circle') {
                 code += `            border-radius: 50%;\n`;
-            } else if (selection.shape === 'polygon') {
-                code += `            clip-path: polygon(${selection.polygonPoints.map(p => `${p.x.toFixed(2)}% ${p.y.toFixed(2)}%`).join(', ')});\n`;
+            } else if (selection.shape === 'polygon' && selection.polygonPoints) {
+                code += `            clip-path: polygon(${selection.polygonPoints.map(p => `${p.x}% ${p.y}%`).join(', ')});\n`;
             }
             
             code += `            background-color: rgba(0, 123, 255, 0.3);\n`;
@@ -1291,7 +1319,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // 添加懸停效果
             code += `        }\n`;
-            code += `        #element${id}:hover {\n`;
+            code += `        #${selection.name}:hover {\n`;
             code += `            background-color: rgba(0, 123, 255, 0.5);\n`;
             code += `        }\n`;
         });
@@ -1302,10 +1330,9 @@ document.addEventListener('DOMContentLoaded', function() {
         code += '    <div class="image-container">\n';
         code += `        <img src="${uploadedImage.src}" alt="Selected Image">\n`;
         
-        // 添加所有選擇區的HTML
+        // 添加所有選擇區的HTML - 使用ID
         selections.forEach(selection => {
-            const id = selection.id.replace('selection-', '');
-            code += `        <div id="element${id}" data-name="${selection.name}" data-description="${selection.description || ''}"></div>\n`;
+            code += `        <div id="${selection.name}" ${selection.description ? `data-description="${selection.description}"` : ''}></div>\n`;
         });
         
         code += '    </div>\n';
@@ -1316,8 +1343,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 為每個選擇區添加點擊事件
         selections.forEach(selection => {
-            const id = selection.id.replace('selection-', '');
-            code += `            document.getElementById("element${id}").addEventListener("click", function() {\n`;
+            code += `            document.getElementById("${selection.name}").addEventListener("click", function() {\n`;
             code += `                alert("點擊了: ${selection.name}" + (this.dataset.description ? " - " + this.dataset.description : ""));\n`;
             code += '            });\n';
         });
