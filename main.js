@@ -48,11 +48,38 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // 添加編輯 ID 的函數
+    function editIdInternal(element) {
+        const selectionId = element.id;
+        const selection = selections.find(s => s.id === selectionId);
+        const currentId = selection.name;
+        
+        const newId = prompt('請輸入新的 ID 名稱：', currentId);
+        if (newId !== null && newId.trim() !== '') {
+            const trimmedId = newId.trim();
+            selection.name = trimmedId;
+            const label = element.querySelector('.selection-label');
+            if (label) {
+                label.textContent = trimmedId;
+            }
+            updateSelectionsList();
+            updateOutputResult();
+        }
+    }
+
     // 暴露給全局的編輯說明函數
     window.editDescription = function(elementId) {
         const element = document.getElementById(elementId);
         if (element) {
             editDescriptionInternal(element);
+        }
+    };
+
+    // 暴露給全局的編輯 ID 函數
+    window.editId = function(elementId) {
+        const element = document.getElementById(elementId);
+        if (element) {
+            editIdInternal(element);
         }
     };
 
@@ -173,7 +200,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const percentWidth = (selection.width * 100).toFixed(2);
             const percentHeight = (selection.height * 100).toFixed(2);
             
-            let attributes = `id="${selection.id}" data-name="${selection.name}"`;
+            let attributes = `id="${selection.name}"`;
             
             if (selection.description) {
                 attributes += ` data-description="${selection.description}"`;
@@ -621,7 +648,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="selection-item bg-white p-4 rounded-lg shadow mb-4">
                     <div class="flex justify-between items-start">
                         <div>
-                            <h3 class="font-semibold text-lg">${selection.id}</h3>
+                            <h3 class="font-semibold text-lg">${selection.name}</h3>
                             <p class="text-sm text-gray-600">
                                 位置: 左${percentLeft}% 上${percentTop}%<br>
                                 尺寸: 寬${percentWidth}% 高${percentHeight}%
@@ -629,6 +656,9 @@ document.addEventListener('DOMContentLoaded', function() {
                             ${selection.description ? `<p class="text-sm text-gray-800 mt-2">說明: ${selection.description}</p>` : ''}
                         </div>
                         <div class="space-x-2">
+                            <button onclick="editId('${selection.id}')" class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm">
+                                編輯ID
+                            </button>
                             <button onclick="editDescription('${selection.id}')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
                                 編輯說明
                             </button>
@@ -707,7 +737,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const percentWidth = (selection.width * 100).toFixed(2);
             const percentHeight = (selection.height * 100).toFixed(2);
             
-            let attributes = `id="${selection.id}" style="left: ${percentLeft}%; top: ${percentTop}%; width: ${percentWidth}%; height: ${percentHeight}%;"`;
+            let attributes = `id="${selection.name}" style="left: ${percentLeft}%; top: ${percentTop}%; width: ${percentWidth}%; height: ${percentHeight}%;"`;
             if (selection.description) {
                 attributes += ` data-description="${selection.description}"`;
             }
