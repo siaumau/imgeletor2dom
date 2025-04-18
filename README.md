@@ -17,6 +17,37 @@ ImgEleTor is an intuitive and powerful web tool that allows you to upload images
 - 📋 一鍵複製生成的 HTML 代碼 | One-click copy of generated HTML code
 - 📱 響應式設計，適配不同螢幕尺寸 | Responsive design for various screen sizes
 
+## 🔄 操作流程圖 | Operation Flowchart
+
+```mermaid
+flowchart TD
+    Start([開始 / Start]) --> UploadImg[上傳圖片 / Upload Image]
+    UploadImg --> SelectTool[選擇工具類型：矩形/圓形<br/>Choose Tool: Rectangle/Circle]
+    SelectTool --> DrawShape[在圖片上圈選區域<br/>Draw Selection on Image]
+    DrawShape --> AdjustPosition[調整位置和大小<br/>Adjust Position & Size]
+    AdjustPosition --> CustomizeID[自定義 ID 名稱<br/>Customize ID]
+    CustomizeID --> AddDesc[添加描述說明<br/>Add Description]
+    
+    AddDesc --> MoreAreas{需要更多選區?<br/>Need More Areas?}
+    MoreAreas -- 是/Yes --> SelectTool
+    
+    MoreAreas -- 否/No --> ClickFinish[點擊「完成」按鈕<br/>Click 'Finish' Button]
+    ClickFinish --> PreviewResult[預覽效果<br/>Preview Result]
+    PreviewResult --> CopyCode[複製生成的代碼<br/>Copy Generated Code]
+    CopyCode --> UseCode[使用代碼在您的項目中<br/>Use Code in Your Project]
+    UseCode --> End([結束 / End])
+    
+    subgraph 可隨時進行的操作 / Operations Available Anytime
+    EditExisting[編輯現有選區<br/>Edit Existing Selections]
+    DeleteUnwanted[刪除不需要的選區<br/>Delete Unwanted Selections]
+    end
+    
+    DrawShape -.- EditExisting
+    AdjustPosition -.- EditExisting
+    AddDesc -.- EditExisting
+    DrawShape -.- DeleteUnwanted
+```
+
 ## 🚀 使用方法 | How to Use
 
 ### 1. 上傳圖片 | Upload Image
