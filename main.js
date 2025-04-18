@@ -42,6 +42,12 @@ document.addEventListener('DOMContentLoaded', function() {
     let temporaryLine = null;
     let polygonHint = null;
 
+    // 在全局變量區域添加新變量
+    let firstPointHighlight = null;
+    let isNearFirstPoint = false;
+    let isShowingCloseConfirm = false;
+    const CLOSE_DISTANCE_THRESHOLD = 15; // 像素距離，判定為接近第一個點的閾值
+
     // 添加編輯說明的函數
     function editDescriptionInternal(element) {
         const selectionId = element.id;
@@ -552,6 +558,28 @@ document.addEventListener('DOMContentLoaded', function() {
             currentPolygonElement.style.height = imgRect.height + 'px';
             
             selectionsContainer.appendChild(currentPolygonElement);
+        } else if (polygonPoints.length >= 3) {
+            // 檢查是否點擊了第一個點
+            const firstPoint = polygonPoints[0];
+            const distance = Math.sqrt(
+                Math.pow(relativeX - firstPoint.x, 2) + 
+                Math.pow(relativeY - firstPoint.y, 2)
+            );
+            
+            // 如果點擊了第一個點，詢問是否閉合多邊形
+            if (distance < CLOSE_DISTANCE_THRESHOLD) {
+                if (confirm('要閉合多邊形嗎？')) {
+                    finishPolygon(imgRect, containerRect);
+                    return;
+                } else {
+                    // 用戶選擇不閉合，繼續添加點
+                    // 重置高亮
+                    isNearFirstPoint = false;
+                    if (firstPointHighlight) {
+                        firstPointHighlight.style.display = 'none';
+                    }
+                }
+            }
         }
         
         // 添加點到數組
@@ -570,16 +598,18 @@ document.addEventListener('DOMContentLoaded', function() {
         pointIndicator.setAttribute('stroke-width', '2');
         currentPolygonElement.querySelector('svg').appendChild(pointIndicator);
         
-        // 檢查是否要閉合多邊形
-        if (polygonPoints.length > 2) {
-            const firstPoint = polygonPoints[0];
-            const distance = Math.sqrt(
-                Math.pow(relativeX - firstPoint.x, 2) + 
-                Math.pow(relativeY - firstPoint.y, 2)
-            );
-            
-            // 如果距離第一個點很近，或者點擊次數超過10次，則閉合多邊形
-            if (distance < 20 || polygonPoints.length > 10) {
+        // 為第一個點添加特殊樣式
+        if (polygonPoints.length === 1) {
+            pointIndicator.setAttribute('r', '5');
+            pointIndicator.setAttribute('fill', '#ffcc00');
+            pointIndicator.setAttribute('stroke', '#ff6b00');
+            pointIndicator.setAttribute('stroke-width', '2.5');
+            pointIndicator.classList.add('first-polygon-point');
+        }
+        
+        // 檢查是否要閉合多邊形（超過10個點）
+        if (polygonPoints.length > 10) {
+            if (confirm('已達到10個點，要自動閉合多邊形嗎？')) {
                 finishPolygon(imgRect, containerRect);
                 return;
             }
@@ -617,6 +647,80 @@ document.addEventListener('DOMContentLoaded', function() {
             temporaryLine.setAttribute('y1', lastPoint.y);
             temporaryLine.setAttribute('x2', relativeX);
             temporaryLine.setAttribute('y2', relativeY);
+        }
+        
+        // 檢查是否接近第一個點（僅當有至少3個點時才檢查）
+        if (polygonPoints.length >= 3) {
+            const firstPoint = polygonPoints[0];
+            const distance = Math.sqrt(
+                Math.pow(relativeX - firstPoint.x, 2) + 
+                Math.pow(relativeY - firstPoint.y, 2)
+            );
+            
+            // 如果接近第一個點，顯示視覺提示
+            if (distance < CLOSE_DISTANCE_THRESHOLD) {
+                if (!isNearFirstPoint) {
+                    isNearFirstPoint = true;
+                    
+                    // 創建或顯示第一個點的高亮效果
+                    if (!firstPointHighlight) {
+                        firstPointHighlight = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+                        firstPointHighlight.setAttribute('cx', firstPoint.x);
+                        firstPointHighlight.setAttribute('cy', firstPoint.y);
+                        firstPointHighlight.setAttribute('r', '8');
+                        firstPointHighlight.setAttribute('fill', 'rgba(255, 215, 0, 0.5)');
+                        firstPointHighlight.setAttribute('stroke', 'gold');
+                        firstPointHighlight.setAttribute('stroke-width', '2');
+                        firstPointHighlight.setAttribute('class', 'first-point-highlight');
+                        currentPolygonElement.querySelector('svg').appendChild(firstPointHighlight);
+                    } else {
+                        firstPointHighlight.style.display = 'block';
+                    }
+                    
+                    // 更新提示文字，詢問是否要閉合多邊形
+                    if (!isShowingCloseConfirm && polygonHint) {
+                        const originalHtml = polygonHint.innerHTML;
+                        polygonHint.innerHTML = `
+                            <strong>要閉合多邊形嗎？</strong><br>
+                            <button id="confirmClosePolygon" class="px-2 py-1 bg-green-500 text-white rounded mr-2">確認閉合</button>
+                            <button id="cancelClosePolygon" class="px-2 py-1 bg-gray-500 text-white rounded">繼續編輯</button>
+                        `;
+                        
+                        // 添加按鈕事件
+                        document.getElementById('confirmClosePolygon').addEventListener('click', function() {
+                            finishPolygon(imgRect, rect);
+                            isShowingCloseConfirm = false;
+                        });
+                        
+                        document.getElementById('cancelClosePolygon').addEventListener('click', function() {
+                            // 恢復原來的提示
+                            polygonHint.innerHTML = originalHtml;
+                            isShowingCloseConfirm = false;
+                        });
+                        
+                        isShowingCloseConfirm = true;
+                    }
+                }
+            } else {
+                // 如果離開第一個點範圍，隱藏高亮
+                if (isNearFirstPoint) {
+                    isNearFirstPoint = false;
+                    if (firstPointHighlight) {
+                        firstPointHighlight.style.display = 'none';
+                    }
+                    
+                    // 如果沒有顯示確認對話框，恢復原來的提示
+                    if (!isShowingCloseConfirm && polygonHint) {
+                        polygonHint.innerHTML = `
+                            <strong>不規則選區繪製:</strong><br>
+                            1. 點擊圖片上的點來創建多邊形頂點<br>
+                            2. 每次點擊添加一個點（至少需要3個點）<br>
+                            3. 點擊靠近起始點的位置可閉合多邊形<br>
+                            4. 10個點後會自動閉合
+                        `;
+                    }
+                }
+            }
         }
     }
 
@@ -739,8 +843,14 @@ document.addEventListener('DOMContentLoaded', function() {
     function resetPolygonDrawing() {
         isDrawingPolygon = false;
         polygonPoints = [];
-        currentPolygonElement = null;
-        temporaryLine = null;
+        isNearFirstPoint = false;
+        isShowingCloseConfirm = false;
+        
+        // 清除第一個點的高亮效果
+        if (firstPointHighlight) {
+            firstPointHighlight.style.display = 'none';
+            firstPointHighlight = null;
+        }
         
         // 清除可能存在的未完成多邊形
         if (currentPolygonElement && currentPolygonElement.parentNode) {
