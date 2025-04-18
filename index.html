@@ -62,9 +62,7 @@
                 </div>
 
                 <div class="flex-1 min-w-[200px] flex justify-end gap-2">
-                    <button id="maximizeBtn" class="btn-primary flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm" data-tooltip="最大化顯示圖片">
-                        <i class="fas fa-expand mr-2"></i>最大化
-                    </button>
+
                     <button id="finishBtn" class="btn-success flex items-center justify-center bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md shadow-sm" data-tooltip="生成代碼和預覽">
                         <i class="fas fa-check mr-2"></i>完成
                     </button>
@@ -80,9 +78,14 @@
                 <!-- 圖片和選擇區域容器 -->
                 <div class="lg:col-span-2">
                     <div class="bg-gray-50 rounded-lg p-4">
-                        <h2 class="text-xl font-semibold mb-3 flex items-center text-gray-800">
-                            <i class="fas fa-image mr-2 text-indigo-500"></i>圖片編輯區
-                        </h2>
+                        <div class="flex justify-between items-center mb-3">
+                            <h2 class="text-xl font-semibold flex items-center text-gray-800">
+                                <i class="fas fa-image mr-2 text-indigo-500"></i>圖片編輯區
+                            </h2>
+                            <button id="maximizeBtn" class="btn-primary flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm" data-tooltip="最大化顯示圖片">
+                                <i class="fas fa-expand mr-2"></i>最大化
+                            </button>
+                        </div>
                         <div id="imageContainer" class="relative border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center min-h-[400px] overflow-hidden">
                             <div id="placeholderText" class="text-gray-500 text-center p-8 flex flex-col items-center">
                                 <i class="fas fa-cloud-upload-alt text-4xl mb-3 text-gray-400"></i>
@@ -110,7 +113,7 @@
                         </h2>
                         <div id="selectionsList" class="border border-gray-200 rounded-lg p-4 bg-white min-h-[200px] max-h-[400px] overflow-y-auto">
                             <div id="noSelectionsText" class="text-gray-500 p-4 text-center">
-                                <i class="fas fa-folder-open text-2xl mb-2 block"></i>
+                                <i class="fas fa-crop-alt text-2xl mb-2 block"></i>
                                 尚未有選擇的區域
                             </div>
                         </div>
