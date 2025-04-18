@@ -128,6 +128,21 @@ document.addEventListener('DOMContentLoaded', function() {
     // 完成按鈕
     finishBtn.addEventListener('click', function() {
         updateOutputResult();
+        
+        // 自動觸發預覽功能
+        if (uploadedImage.src && selections.length > 0) {
+            // 顯示預覽容器
+            previewContainer.classList.remove('hidden');
+            
+            // 設置預覽圖片
+            previewImage.src = uploadedImage.src;
+            
+            // 更新預覽
+            updatePreview();
+            
+            // 滾動到預覽區域
+            previewContainer.scrollIntoView({ behavior: 'smooth' });
+        }
     });
 
     // 重置按鈕
