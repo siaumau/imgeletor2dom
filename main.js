@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const finishBtn = document.getElementById('finishBtn');
     const resetBtn = document.getElementById('resetBtn');
     const previewBtn = document.getElementById('previewBtn');
+    const maximizeBtn = document.getElementById('maximizeBtn');
     const previewContainer = document.getElementById('previewContainer');
     const previewImage = document.getElementById('previewImage');
     const previewSelections = document.getElementById('previewSelections');
@@ -813,5 +814,39 @@ document.addEventListener('DOMContentLoaded', function() {
             });
             imageContainer.dispatchEvent(event);
         }
+    });
+
+    // 最大化按鈕
+    maximizeBtn.addEventListener('click', function() {
+        if (!uploadedImage.src || uploadedImage.classList.contains('hidden')) {
+            alert('請先上傳圖片');
+            return;
+        }
+
+        // 切換最大化狀態
+        if (imageContainer.classList.contains('maximize-mode')) {
+            // 恢復正常顯示模式
+            imageContainer.classList.remove('maximize-mode');
+            uploadedImage.classList.remove('width-maximized');
+            maximizeBtn.innerHTML = '<i class="fas fa-expand mr-2"></i>最大化';
+            maximizeBtn.setAttribute('data-tooltip', '最大化顯示圖片');
+        } else {
+            // 切換到最大化顯示模式
+            imageContainer.classList.add('maximize-mode');
+            uploadedImage.classList.add('width-maximized');
+            maximizeBtn.innerHTML = '<i class="fas fa-compress mr-2"></i>恢復';
+            maximizeBtn.setAttribute('data-tooltip', '恢復原始尺寸');
+        }
+        
+        // 更新選區位置（因為圖片尺寸變化）
+        selections.forEach(selection => {
+            const element = document.getElementById(selection.id);
+            if (element) {
+                element.style.left = `${selection.left * 100}%`;
+                element.style.top = `${selection.top * 100}%`;
+                element.style.width = `${selection.width * 100}%`;
+                element.style.height = `${selection.height * 100}%`;
+            }
+        });
     });
 });

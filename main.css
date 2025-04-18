@@ -358,3 +358,33 @@ pre#outputResult {
 @keyframes fadeIn {
     to { opacity: 0.9; }
 }
+
+/* 圖片最大化顯示模式 */
+.maximize-mode {
+    min-height: 500px !important;
+    height: auto !important;
+    padding: 0 !important;
+    border: none !important;
+    background: none !important;
+}
+
+.width-maximized {
+    width: 100% !important;
+    max-height: none !important;
+    height: auto !important;
+    object-fit: contain;
+    display: block !important;
+    max-width: 100% !important;
+}
+
+/* 按鈕顏色 */
+.btn-blue {
+    background-color: #3b82f6;
+    box-shadow: 0 4px 6px rgba(59, 130, 246, 0.25);
+}
+
+.btn-blue:hover {
+    background-color: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px rgba(59, 130, 246, 0.3);
+}
