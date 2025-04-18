@@ -1,12 +1,57 @@
 /* Custom styles for the selection tool */
 
+:root {
+    --primary-color: #4f46e5;
+    --primary-hover: #4338ca;
+    --secondary-color: #06b6d4;
+    --secondary-light: rgba(6, 182, 212, 0.2);
+    --success-color: #10b981;
+    --warning-color: #f59e0b;
+    --danger-color: #ef4444;
+    --light-color: #f3f4f6;
+    --dark-color: #111827;
+}
+
+body {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.app-container {
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    border-radius: 12px;
+    overflow: hidden;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.app-header {
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    color: white;
+    padding: 1.5rem;
+    border-radius: 8px 8px 0 0;
+}
+
+.app-title {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
 .selection-area {
     position: absolute;
-    border: 2px solid rgba(0, 123, 255, 0.8);
-    background-color: rgba(0, 123, 255, 0.2);
+    border: 2px solid var(--secondary-color);
+    background-color: var(--secondary-light);
     pointer-events: auto;
     cursor: move;
     z-index: 10;
+    box-shadow: 0 0 10px rgba(6, 182, 212, 0.3);
+    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.selection-area:hover {
+    border-color: var(--primary-color);
+    background-color: rgba(79, 70, 229, 0.2);
+    box-shadow: 0 0 15px rgba(79, 70, 229, 0.4);
 }
 
 .circular {
@@ -15,44 +60,52 @@
 
 .selection-area .resize-handle {
     position: absolute;
-    width: 10px;
-    height: 10px;
+    width: 12px;
+    height: 12px;
     background-color: white;
-    border: 1px solid rgba(0, 123, 255, 0.8);
+    border: 2px solid var(--secondary-color);
     z-index: 20;
+    border-radius: 50%;
+    box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.selection-area .resize-handle:hover {
+    transform: scale(1.2);
+    background-color: var(--secondary-color);
 }
 
 .selection-area .resize-handle.nw {
-    top: -5px;
-    left: -5px;
+    top: -6px;
+    left: -6px;
     cursor: nwse-resize;
 }
 
 .selection-area .resize-handle.ne {
-    top: -5px;
-    right: -5px;
+    top: -6px;
+    right: -6px;
     cursor: nesw-resize;
 }
 
 .selection-area .resize-handle.sw {
-    bottom: -5px;
-    left: -5px;
+    bottom: -6px;
+    left: -6px;
     cursor: nesw-resize;
 }
 
 .selection-area .resize-handle.se {
-    bottom: -5px;
-    right: -5px;
+    bottom: -6px;
+    right: -6px;
     cursor: nwse-resize;
 }
 
 .selection-area .delete-btn {
     position: absolute;
-    top: -15px;
-    right: -15px;
-    width: 20px;
-    height: 20px;
-    background-color: red;
+    top: -10px;
+    right: -10px;
+    width: 22px;
+    height: 22px;
+    background-color: var(--danger-color);
     color: white;
     border-radius: 50%;
     display: flex;
@@ -62,30 +115,86 @@
     font-weight: bold;
     cursor: pointer;
     z-index: 30;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    transition: transform 0.15s ease, background-color 0.15s ease;
+}
+
+.selection-area .delete-btn:hover {
+    transform: scale(1.1);
+    background-color: #dc2626;
 }
 
 .selection-area .selection-label {
     position: absolute;
-    top: -25px;
+    top: -30px;
     left: 0;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: var(--dark-color);
     color: white;
-    padding: 2px 6px;
-    border-radius: 3px;
+    padding: 3px 8px;
+    border-radius: 4px;
     font-size: 12px;
     white-space: nowrap;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+    opacity: 0.9;
+    transition: opacity 0.3s ease;
+}
+
+.selection-area:hover .selection-label {
+    opacity: 1;
 }
 
 button.active {
-    background-color: #3b82f6 !important; /* Tailwind blue-500 */
+    background-color: var(--primary-color) !important;
+    box-shadow: 0 4px 6px rgba(79, 70, 229, 0.25);
 }
 
 button.active:hover {
-    background-color: #2563eb !important; /* Tailwind blue-600 */
+    background-color: var(--primary-hover) !important;
+}
+
+button {
+    transition: all 0.2s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+button::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 5px;
+    height: 5px;
+    background: rgba(255, 255, 255, 0.5);
+    opacity: 0;
+    border-radius: 100%;
+    transform: scale(1, 1) translate(-50%);
+    transform-origin: 50% 50%;
+}
+
+button:active::after {
+    opacity: 1;
+    transform: scale(50, 50) translate(-50%);
+    transition: all 0.5s ease;
+}
+
+#imageContainer {
+    transition: all 0.3s ease;
+    background-image: 
+        linear-gradient(45deg, rgba(0, 0, 0, 0.03) 25%, transparent 25%), 
+        linear-gradient(-45deg, rgba(0, 0, 0, 0.03) 25%, transparent 25%), 
+        linear-gradient(45deg, transparent 75%, rgba(0, 0, 0, 0.03) 75%), 
+        linear-gradient(-45deg, transparent 75%, rgba(0, 0, 0, 0.03) 75%);
+    background-size: 20px 20px;
+    background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
 }
 
 #imageContainer.drawing {
     cursor: crosshair;
+}
+
+#imageContainer:hover {
+    box-shadow: 0 0 0 2px var(--secondary-light);
 }
 
 .dragging {
@@ -96,53 +205,156 @@ button.active:hover {
     cursor: nwse-resize !important;
 }
 
-/* Styling for the selection list items */
-.selection-list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 12px;
-    margin-bottom: 8px;
-    background-color: #f3f4f6;
-    border-radius: 4px;
+/* Styling for the selections list */
+.selection-item {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-left: 4px solid var(--secondary-color);
 }
 
-.selection-list-item:last-child {
-    margin-bottom: 0;
+.selection-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
-.selection-color-indicator {
-    width: 16px;
-    height: 16px;
-    border-radius: 3px;
-    display: inline-block;
-    margin-right: 8px;
+/* 按鈕樣式優化 */
+.btn-primary {
+    background-color: var(--primary-color);
+    box-shadow: 0 4px 6px rgba(79, 70, 229, 0.25);
 }
 
-.selection-list-item .selection-info {
-    flex: 1;
+.btn-primary:hover {
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px rgba(79, 70, 229, 0.3);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+}
+
+.btn-success {
+    background-color: var(--success-color);
+    box-shadow: 0 4px 6px rgba(16, 185, 129, 0.25);
+}
+
+.btn-success:hover {
+    background-color: #0ca678;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px rgba(16, 185, 129, 0.3);
+}
+
+.btn-danger {
+    background-color: var(--danger-color);
+    box-shadow: 0 4px 6px rgba(239, 68, 68, 0.25);
+}
+
+.btn-danger:hover {
+    background-color: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 8px rgba(239, 68, 68, 0.3);
 }
 
 /* 預覽樣式 */
 #previewContainer {
     min-height: 300px;
     overflow: hidden;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
 }
 
 #previewSelections {
-    pointer-events: none; /* 讓選區不會阻擋圖片的點擊 */
+    pointer-events: none;
 }
 
 #previewSelections div {
-    transition: all 0.2s ease;
-    pointer-events: auto; /* 讓選區可以接收鼠標事件 */
+    transition: all 0.3s ease;
+    pointer-events: auto;
 }
 
 #previewSelections div:hover {
-    border-color: rgba(255, 255, 0, 0.9) !important;
-    background-color: rgba(255, 255, 0, 0.3) !important;
+    border-color: rgba(250, 204, 21, 0.9) !important;
+    background-color: rgba(250, 204, 21, 0.3) !important;
+    box-shadow: 0 0 20px rgba(250, 204, 21, 0.5) !important;
 }
 
-#previewBtn {
-    transition: all 0.2s ease;
+/* 載入動畫 */
+@keyframes pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 1; }
+    100% { opacity: 0.6; }
+}
+
+.loading {
+    animation: pulse 1.5s infinite ease-in-out;
+}
+
+/* 自訂滾動條 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--secondary-color);
+    border-radius: 10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--primary-color);
+}
+
+/* 代碼區域美化 */
+pre#outputResult {
+    background: linear-gradient(to right, #1e293b, #334155);
+    color: #e2e8f0;
+    border-radius: 8px;
+    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    overflow-x: auto;
+    padding: 1rem;
+    font-family: 'Fira Code', 'Cascadia Code', Consolas, monospace;
+    line-height: 1.5;
+}
+
+/* 響應式調整 */
+@media (max-width: 768px) {
+    .app-title {
+        font-size: 1.5rem;
+    }
+    
+    .selection-area .selection-label {
+        font-size: 10px;
+        top: -25px;
+    }
+}
+
+/* 工具提示樣式 */
+.tooltip {
+    position: relative;
+}
+
+.tooltip:hover::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 5px 10px;
+    background-color: var(--dark-color);
+    color: white;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 100;
+    opacity: 0;
+    animation: fadeIn 0.3s forwards;
+}
+
+@keyframes fadeIn {
+    to { opacity: 0.9; }
 }
