@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function() {
             1. 點擊圖片上的點來創建多邊形頂點<br>
             2. 每次點擊添加一個點（至少需要3個點）<br>
             3. 點擊靠近起始點的位置可閉合多邊形<br>
-            4. 10個點後會自動閉合
+            4. 50個點後會自動閉合
         `;
         
         polygonHint.style.display = 'block';
@@ -607,9 +607,9 @@ document.addEventListener('DOMContentLoaded', function() {
             pointIndicator.classList.add('first-polygon-point');
         }
         
-        // 檢查是否要閉合多邊形（超過10個點）
-        if (polygonPoints.length > 10) {
-            if (confirm('已達到10個點，要自動閉合多邊形嗎？')) {
+        // 檢查是否要閉合多邊形（超過50個點）
+        if (polygonPoints.length >50) {
+            if (confirm('已達到50個點，要自動閉合多邊形嗎？')) {
                 finishPolygon(imgRect, containerRect);
                 return;
             }
@@ -716,7 +716,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             1. 點擊圖片上的點來創建多邊形頂點<br>
                             2. 每次點擊添加一個點（至少需要3個點）<br>
                             3. 點擊靠近起始點的位置可閉合多邊形<br>
-                            4. 10個點後會自動閉合
+                            4. 50個點後會自動閉合
                         `;
                     }
                 }
