@@ -93,7 +93,7 @@ flowchart TD
 - 選擇多邊形工具後，在圖片上點擊添加頂點
 - 至少需要3個點才能形成有效多邊形
 - 接近起始點時，會有高亮提示可閉合多邊形
-- 達到10個點時會詢問是否自動閉合
+- 達到50個點時會詢問是否自動閉合
 - 完成的多邊形可以像其他選區一樣調整位置和大小
 
 ---
@@ -101,7 +101,7 @@ flowchart TD
 - After selecting the polygon tool, click on the image to add vertices
 - At least 3 points are required to form a valid polygon
 - When approaching the starting point, a highlight prompt will appear to close the polygon
-- At 10 points, you'll be asked if you want to automatically close the polygon
+- At 50 points, you'll be asked if you want to automatically close the polygon
 - Completed polygons can be repositioned and resized like other selections
 
 ### 5. 自定義選區 | Customize Selections
