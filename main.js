@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const previewSelections = document.getElementById('previewSelections');
     const copyCodeBtn = document.getElementById('copyCodeBtn');
     const copyFullCodeBtn = document.getElementById('copyFullCodeBtn');
+    const copyFullCodeNoBase64Btn = document.getElementById('copyFullCodeNoBase64Btn');
 
     // 狀態變量
     let isDrawing = false;
@@ -364,6 +365,69 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         // 移除臨時元素
+        document.body.removeChild(textarea);
+    });
+
+    // 複製完整程式碼（無 Base64）按鈕
+    copyFullCodeNoBase64Btn.addEventListener('click', function() {
+        if (!uploadedImage.src || selections.length === 0) {
+            alert('請先上傳圖片並創建至少一個圈選區域');
+            return;
+        }
+
+        // 不含 Base64，使用空 src
+        const imgSrc = '';
+        const selectionsHTML = selections.map(selection => {
+            const percentLeft = (selection.left * 100).toFixed(2);
+            const percentTop = (selection.top * 100).toFixed(2);
+            const percentWidth = (selection.width * 100).toFixed(2);
+            const percentHeight = (selection.height * 100).toFixed(2);
+            let attributes = `id="${selection.name}"`;
+            if (selection.description) {
+                attributes += ` data-description="${selection.description}"`;
+            }
+            return `<div ${attributes} 
+                      class="absolute ${selection.shape === 'circle' ? 'rounded-full' : ''}" 
+                      style="left: ${percentLeft}%; top: ${percentTop}%; width: ${percentWidth}%; height: ${percentHeight}%;">
+                  </div>`;
+        }).join('\n');
+
+        const fullCodeNoBase64 = `<div class="relative">
+   <img src="${imgSrc}" alt="圖片" class="w-full">
+   <div class="absolute top-0 left-0 w-full h-full">
+       ${selectionsHTML}
+   </div>
+</div>`;
+
+        // 複製到剪貼簿
+        const textarea = document.createElement('textarea');
+        textarea.value = fullCodeNoBase64;
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            const successful = document.execCommand('copy');
+            if (successful) {
+                const originalText = copyFullCodeNoBase64Btn.innerHTML;
+                copyFullCodeNoBase64Btn.innerHTML = `
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+                    </svg>
+                    已複製!
+                `;
+                copyFullCodeNoBase64Btn.classList.remove('bg-indigo-500', 'hover:bg-indigo-600');
+                copyFullCodeNoBase64Btn.classList.add('bg-green-500', 'hover:bg-green-600');
+                setTimeout(function() {
+                    copyFullCodeNoBase64Btn.innerHTML = originalText;
+                    copyFullCodeNoBase64Btn.classList.remove('bg-green-500', 'hover:bg-green-600');
+                    copyFullCodeNoBase64Btn.classList.add('bg-indigo-500', 'hover:bg-indigo-600');
+                }, 2000);
+            } else {
+                alert('複製失敗，請手動複製');
+            }
+        } catch (err) {
+            console.error('複製出錯:', err);
+            alert('複製失敗，請手動複製');
+        }
         document.body.removeChild(textarea);
     });
 
