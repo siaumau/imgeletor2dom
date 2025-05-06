@@ -118,8 +118,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // 高亮列表項，color 可為 'green' 或 'yellow'
+    function highlightListItem(id, color = 'green') {
+        document.querySelectorAll('.selection-item').forEach(el => {
+            el.classList.remove('border-2','rounded-lg','border-green-500','border-yellow-500');
+        });
+        const listEl = document.getElementById('list-' + id);
+        if (listEl) {
+            listEl.classList.add('border-2','rounded-lg', `border-${color}-500`);
+        }
+    }
+
     // 暴露給全局的編輯說明函數
     window.editDescription = function(elementId) {
+        highlightListItem(elementId, 'yellow');
         const element = document.getElementById(elementId);
         if (element) {
             editDescriptionInternal(element);
@@ -128,6 +140,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 暴露給全局的編輯 ID 函數
     window.editId = function(elementId) {
+        highlightListItem(elementId, 'green');
         const element = document.getElementById(elementId);
         if (element) {
             editIdInternal(element);
@@ -473,6 +486,11 @@ document.addEventListener('DOMContentLoaded', function() {
         selectionDiv.appendChild(label);
         
         selectionsContainer.appendChild(selectionDiv);
+        // 點擊左側選區時，高亮右側清單
+        selectionDiv.addEventListener('click', function(evt) {
+            evt.stopPropagation();
+            highlightListItem(selId, 'green');
+        });
         selectedElement = selectionDiv;
         
         // 標記容器為繪製狀態
@@ -825,6 +843,11 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // 重置多邊形繪製狀態
         resetPolygonDrawing();
+        // 多邊形選區也可點擊高亮列表
+        currentPolygonElement.addEventListener('click', function(evt) {
+            evt.stopPropagation();
+            highlightListItem(polyId, 'green');
+        });
     }
     
     // 重置多邊形繪製狀態
@@ -1188,7 +1211,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const percentHeight = (selection.height * 100).toFixed(2);
             
             return `
-                <div class="selection-item bg-white p-4 rounded-lg shadow mb-4">
+                <div id="list-${selection.id}" class="selection-item bg-white p-4 rounded-lg shadow mb-4">
                     <div class="flex justify-between items-start">
                         <div>
                             <h3 class="font-semibold text-sm">${selection.name}</h3>
@@ -1476,7 +1499,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Image Selections</title>
 </head>
-<body class="bg-white p-4">
+<body id="imageContainer" class="bg-white p-4">
   <div class="relative w-full max-w-[800px] mx-auto">
     <img src="${imgSrc}" alt="Selected Image" class="w-full block">
 `;
