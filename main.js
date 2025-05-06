@@ -1,4 +1,19 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // 平滑滾動到指定 CSS Selector 的區塊
+    function scrollToSelector(selector) {
+        const el = document.querySelector(selector);
+        if (el) {
+            el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }
+    /**
+     * 開啟新分頁連結
+     * @param {string} url 要打開的 URL
+     */
+    function openLinkUrl(url) {
+        window.open(url, '_blank', 'noopener');
+    }
+
     // DOM元素
     const imageUpload = document.getElementById('imageUpload');
     const uploadedImage = document.getElementById('uploadedImage');
@@ -34,8 +49,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let originalLeft, originalTop;
     let aspectRatio = 1;
     let imageWidth, imageHeight;
-    let currentSelectionId = 1;
-    
+
     // 多邊形繪製相關變量
     let isDrawingPolygon = false;
     let polygonPoints = [];
@@ -49,13 +63,22 @@ document.addEventListener('DOMContentLoaded', function() {
     let isShowingCloseConfirm = false;
     const CLOSE_DISTANCE_THRESHOLD = 15; // 像素距離，判定為接近第一個點的閾值
 
+    // 用於生成唯一選區 ID：格式 selection-YYYYMMDDHHMMSS
+    function generateSelectionId() {
+        const now = new Date();
+        const pad = n => n.toString().padStart(2,'0');
+        return 'selection-' + now.getFullYear()
+            + pad(now.getMonth()+1) + pad(now.getDate())
+            + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+    }
+
     // 添加編輯說明的函數
     function editDescriptionInternal(element) {
         const selectionId = element.id;
         const selection = selections.find(s => s.id === selectionId);
         const currentDescription = selection.description || '';
         
-        const description = prompt('請輸入此區域的說明：', currentDescription);
+        const description = prompt('請輸入此區域Alt的說明：', currentDescription);
         if (description !== null) {
             selection.description = description;
             element.setAttribute('data-description', description);
@@ -232,8 +255,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const { cssCode, htmlCode, jsCode } = generateSelectionCode();
-        outputResult.textContent = cssCode + htmlCode + jsCode;
+        const { htmlCode, jsCode } = generateSelectionCode();
+        outputResult.textContent = htmlCode + jsCode;
         outputResult.parentElement.classList.remove('hidden');
         
         // 滾動到代碼區域
@@ -300,71 +323,13 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('請先上傳圖片並創建至少一個圈選區域');
             return;
         }
-        
-        // 創建一個包含圖片和選區的HTML代碼
-        const imgSrc = uploadedImage.src;
-        
-        const selectionsHTML = selections.map(selection => {
-            const percentLeft = (selection.left * 100).toFixed(2);
-            const percentTop = (selection.top * 100).toFixed(2);
-            const percentWidth = (selection.width * 100).toFixed(2);
-            const percentHeight = (selection.height * 100).toFixed(2);
-            
-            let attributes = `id="${selection.name}"`;
-            
-            if (selection.description) {
-                attributes += ` data-description="${selection.description}"`;
-            }
-            
-            return `<div ${attributes} 
-                      class="absolute ${selection.shape === 'circle' ? 'rounded-full' : ''}" 
-                      style="left: ${percentLeft}%; top: ${percentTop}%; width: ${percentWidth}%; height: ${percentHeight}%;">
-                  </div>`;
-        }).join('\n');
-        
-        const fullCode = `<div class="relative">
-  <img src="${imgSrc}" alt="圖片" class="w-full">
-  <div class="absolute top-0 left-0 w-full h-full">
-    ${selectionsHTML}
-  </div>
-</div>`;
-        
-        // 使用臨時textarea來複製內容
+        const fullCode = generateFullCode(true);
+        // 透過 textarea 複製
         const textarea = document.createElement('textarea');
         textarea.value = fullCode;
         document.body.appendChild(textarea);
         textarea.select();
-        
-        try {
-            // 嘗試複製到剪貼板
-            const successful = document.execCommand('copy');
-            if (successful) {
-                // 更改按鈕文字顯示複製成功
-                const originalText = copyFullCodeBtn.innerHTML;
-                copyFullCodeBtn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    已複製!
-                `;
-                copyFullCodeBtn.classList.remove('bg-indigo-500', 'hover:bg-indigo-600');
-                copyFullCodeBtn.classList.add('bg-green-500', 'hover:bg-green-600');
-                
-                // 2秒後恢復原狀
-                setTimeout(function() {
-                    copyFullCodeBtn.innerHTML = originalText;
-                    copyFullCodeBtn.classList.remove('bg-green-500', 'hover:bg-green-600');
-                    copyFullCodeBtn.classList.add('bg-indigo-500', 'hover:bg-indigo-600');
-                }, 2000);
-            } else {
-                alert('複製失敗，請手動複製');
-            }
-        } catch (err) {
-            console.error('複製出錯:', err);
-            alert('複製失敗，請手動複製');
-        }
-        
-        // 移除臨時元素
+        document.execCommand('copy');
         document.body.removeChild(textarea);
     });
 
@@ -374,60 +339,12 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('請先上傳圖片並創建至少一個圈選區域');
             return;
         }
-
-        // 不含 Base64，使用空 src
-        const imgSrc = '';
-        const selectionsHTML = selections.map(selection => {
-            const percentLeft = (selection.left * 100).toFixed(2);
-            const percentTop = (selection.top * 100).toFixed(2);
-            const percentWidth = (selection.width * 100).toFixed(2);
-            const percentHeight = (selection.height * 100).toFixed(2);
-            let attributes = `id="${selection.name}"`;
-            if (selection.description) {
-                attributes += ` data-description="${selection.description}"`;
-            }
-            return `<div ${attributes} 
-                      class="absolute ${selection.shape === 'circle' ? 'rounded-full' : ''}" 
-                      style="left: ${percentLeft}%; top: ${percentTop}%; width: ${percentWidth}%; height: ${percentHeight}%;">
-                  </div>`;
-        }).join('\n');
-
-        const fullCodeNoBase64 = `<div class="relative">
-   <img src="${imgSrc}" alt="圖片" class="w-full">
-   <div class="absolute top-0 left-0 w-full h-full">
-       ${selectionsHTML}
-   </div>
-</div>`;
-
-        // 複製到剪貼簿
+        const fullCode = generateFullCode(false);
         const textarea = document.createElement('textarea');
-        textarea.value = fullCodeNoBase64;
+        textarea.value = fullCode;
         document.body.appendChild(textarea);
         textarea.select();
-        try {
-            const successful = document.execCommand('copy');
-            if (successful) {
-                const originalText = copyFullCodeNoBase64Btn.innerHTML;
-                copyFullCodeNoBase64Btn.innerHTML = `
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                    </svg>
-                    已複製!
-                `;
-                copyFullCodeNoBase64Btn.classList.remove('bg-indigo-500', 'hover:bg-indigo-600');
-                copyFullCodeNoBase64Btn.classList.add('bg-green-500', 'hover:bg-green-600');
-                setTimeout(function() {
-                    copyFullCodeNoBase64Btn.innerHTML = originalText;
-                    copyFullCodeNoBase64Btn.classList.remove('bg-green-500', 'hover:bg-green-600');
-                    copyFullCodeNoBase64Btn.classList.add('bg-indigo-500', 'hover:bg-indigo-600');
-                }, 2000);
-            } else {
-                alert('複製失敗，請手動複製');
-            }
-        } catch (err) {
-            console.error('複製出錯:', err);
-            alert('複製失敗，請手動複製');
-        }
+        document.execCommand('copy');
         document.body.removeChild(textarea);
     });
 
@@ -509,11 +426,12 @@ document.addEventListener('DOMContentLoaded', function() {
         startX = offsetX;
         startY = offsetY;
         
-        // 創建新的選區元素
+        // 使用時間戳生成新的選區元素 ID
+        const selId = generateSelectionId();
         const selectionDiv = document.createElement('div');
         selectionDiv.className = 'selection-area';
-        selectionDiv.id = 'selection-' + currentSelectionId;
-        selectionDiv.setAttribute('data-name', 'selection-' + currentSelectionId);
+        selectionDiv.id = selId;
+        selectionDiv.setAttribute('data-name', selId);
         
         if (currentShape === 'circle') {
             selectionDiv.classList.add('circular');
@@ -545,7 +463,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // 創建標籤
         const label = document.createElement('div');
         label.className = 'selection-label';
-        label.textContent = 'selection-' + currentSelectionId;
+        label.textContent = selId;
         
         selectionDiv.appendChild(nwHandle);
         selectionDiv.appendChild(neHandle);
@@ -583,8 +501,10 @@ document.addEventListener('DOMContentLoaded', function() {
             // 創建多邊形元素
             currentPolygonElement = document.createElement('div');
             currentPolygonElement.className = 'selection-area polygon-selection';
-            currentPolygonElement.id = 'selection-' + currentSelectionId;
-            currentPolygonElement.setAttribute('data-name', 'selection-' + currentSelectionId);
+            // 使用時間戳生成唯一 ID
+            const polyId = generateSelectionId();
+            currentPolygonElement.id = polyId;
+            currentPolygonElement.setAttribute('data-name', polyId);
             
             // 創建SVG來繪製多邊形
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -822,6 +742,11 @@ document.addEventListener('DOMContentLoaded', function() {
             svg.removeChild(tempLine);
         }
         
+        // 使用時間戳生成 ID
+        const polyId = generateSelectionId();
+        currentPolygonElement.id = polyId;
+        currentPolygonElement.setAttribute('data-name', polyId);
+        
         // 獲取多邊形的邊界
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         polygonPoints.forEach(point => {
@@ -878,15 +803,15 @@ document.addEventListener('DOMContentLoaded', function() {
         // 創建標籤
         const label = document.createElement('div');
         label.className = 'selection-label';
-        label.textContent = 'selection-' + currentSelectionId;
+        label.textContent = 'selection-' + polyId;
         
         currentPolygonElement.appendChild(deleteBtn);
         currentPolygonElement.appendChild(label);
         
         // 添加到選區列表
         selections.push({
-            id: currentPolygonElement.id,
-            name: 'selection-' + currentSelectionId,
+            id: polyId,
+            name: polyId,
             shape: 'polygon',
             left: relativeLeft,
             top: relativeTop,
@@ -896,7 +821,6 @@ document.addEventListener('DOMContentLoaded', function() {
             polygonPoints: adjustedPoints
         });
         
-        currentSelectionId++;
         updateSelectionsList();
         
         // 重置多邊形繪製狀態
@@ -1057,7 +981,7 @@ document.addEventListener('DOMContentLoaded', function() {
             ) {
                 selectionsContainer.removeChild(selectedElement);
             } else {
-                // 添加到選區列表
+                // 使用 selId 作為選區名稱和 id
                 const id = selectedElement.id;
                 const shape = selectedElement.classList.contains('circular') ? 'circle' : 'rectangle';
                 
@@ -1081,7 +1005,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 selections.push({
                     id: id,
-                    name: 'selection-' + currentSelectionId,
+                    name: id,
                     shape: shape,
                     left: relativeLeft,
                     top: relativeTop,
@@ -1090,7 +1014,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     elementRef: selectedElement
                 });
                 
-                currentSelectionId++;
                 updateSelectionsList();
             }
             
@@ -1192,6 +1115,63 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     };
 
+    // 配置動作：滑動到 DOM、外部連結、加入購物車
+    function configureAction(type, id) {
+        const selection = selections.find(s => s.id === id);
+        if (!selection) return;
+        if (type === 'scroll') {
+            const selector = prompt('請輸入要滾動到的 DOM 選擇器（CSS selector）：', selection.scrollSelector || '');
+            if (selector !== null) selection.scrollSelector = selector;
+        } else if (type === 'link') {
+            const url = prompt('請輸入外部連結 URL：', selection.externalLink || '');
+            if (url !== null) selection.externalLink = url;
+        } else if (type === 'cart') {
+            const pid = prompt('請輸入購物車 pid：', selection.pid || '');
+            if (pid !== null) selection.pid = pid;
+        }
+        updateSelectionsList();
+        updateOutputResult();
+    }
+    // 暴露配置動作到全局
+    window.configureAction = configureAction;
+
+    // 處理選區點擊動作：滑動、連結、購物車等
+    function handleSelectionAction(id) {
+        const sel = selections.find(s => s.id === id);
+        if (!sel) return;
+        // 優先滑動
+        if (sel.scrollSelector) {
+            scrollToSelector(sel.scrollSelector);
+            return;
+        }
+        // 外部連結
+        if (sel.externalLink) {
+            openLinkUrl(sel.externalLink);
+            return;
+        }
+        // 購物車操作
+        if (sel.pid) {
+            addToCart(sel.pid);
+            return;
+        }
+        alert('此選區尚未設定任何動作');
+    }
+    // 購物車添加函數（可自行實作 API 呼叫）
+    function addToCart(pid) {
+        console.log('Add to cart pid:', pid);
+        alert('已添加到購物車，PID: ' + pid);
+    }
+    // 暴露到全局
+    window.handleSelectionAction = handleSelectionAction;
+    window.addToCart = addToCart;
+
+    // 切換動作按鈕顯示
+    function toggleConfigRow(id) {
+        const el = document.getElementById(`action-buttons-${id}`);
+        if (el) el.classList.toggle('hidden');
+    }
+    window.toggleConfigRow = toggleConfigRow;
+
     // 更新選區列表顯示
     function updateSelectionsList() {
         if (selections.length === 0) {
@@ -1211,24 +1191,27 @@ document.addEventListener('DOMContentLoaded', function() {
                 <div class="selection-item bg-white p-4 rounded-lg shadow mb-4">
                     <div class="flex justify-between items-start">
                         <div>
-                            <h3 class="font-semibold text-lg">${selection.name}</h3>
+                            <h3 class="font-semibold text-sm">${selection.name}</h3>
                             <p class="text-sm text-gray-600">
                                 位置: 左${percentLeft}% 上${percentTop}%<br>
                                 尺寸: 寬${percentWidth}% 高${percentHeight}%
                             </p>
                             ${selection.description ? `<p class="text-sm text-gray-800 mt-2">說明: ${selection.description}</p>` : ''}
                         </div>
-                        <div class="space-x-2">
-                            <button onclick="editId('${selection.id}')" class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm">
-                                編輯ID
-                            </button>
-                            <button onclick="editDescription('${selection.id}')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">
-                                編輯說明
-                            </button>
-                            <button onclick="deleteSelection('${selection.id}')" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">
-                                刪除
-                            </button>
+       
+                    </div>
+                                     <div class="flex space-x-2">
+                            <button onclick="editId('${selection.id}')" class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm">ID編輯</button>
+                            <button onclick="editDescription('${selection.id}')" class="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm">Alt編輯</button>
+                            <button onclick="deleteSelection('${selection.id}')" class="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm">刪除</button>
+
                         </div>
+                    <hr class="my-2">
+                                                <button onclick="toggleConfigRow('${selection.id}')" class="px-3 py-1 bg-gray-700 text-white rounded hover:bg-gray-800 text-sm">設定動作</button>
+                    <div id="action-buttons-${selection.id}" class="mt-2 flex space-x-2 hidden">
+                        <button onclick="configureAction('scroll','${selection.id}')" class="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-600 text-sm">滑動</button>
+                        <button onclick="configureAction('link','${selection.id}')" class="px-3 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 text-sm">設定連結</button>
+                        <button onclick="configureAction('cart','${selection.id}')" class="px-3 py-1 bg-yellow-500 text-white rounded hover:bg-yellow-600 text-sm">購物車</button>
                     </div>
                 </div>
             `;
@@ -1291,7 +1274,7 @@ document.addEventListener('DOMContentLoaded', function() {
             
             // 添加點擊效果
             previewElement.addEventListener('click', function() {
-                alert(`點擊了: ${selection.name}${selection.description ? ' - ' + selection.description : ''}`);
+                handleSelectionAction(selection.id);
             });
             
             previewSelections.appendChild(previewElement);
@@ -1311,8 +1294,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        const { cssCode, htmlCode, jsCode } = generateSelectionCode();
-        outputResult.textContent = cssCode + htmlCode + jsCode;
+        const { htmlCode, jsCode } = generateSelectionCode();
+        outputResult.textContent = htmlCode + jsCode;
         
         // 如果預覽已經開啟，更新預覽內容
         if (!previewContainer.classList.contains('hidden') && previewImage.src) {
@@ -1402,174 +1385,143 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function generateSelectionCode() {
-        let cssCode = '';
         let htmlCode = '';
+        let jsCode = '';
 
-        selections.forEach(selection => {
-            const id = selection.id.replace('selection-', '');
-            
-            // 使用 ID 選擇器而非 class 選擇器
-            cssCode += `
-/* ${selection.name} ${selection.description ? '- ' + selection.description : ''} */
-#${selection.name} {
-    position: absolute;
-    left: ${(selection.left * 100).toFixed(2)}%;
-    top: ${(selection.top * 100).toFixed(2)}%;
-    width: ${(selection.width * 100).toFixed(2)}%;
-    height: ${(selection.height * 100).toFixed(2)}%;
-    cursor: pointer;
-`;
-
-            // 添加形狀特定的CSS
-            if (selection.shape === 'circle') {
-                cssCode += `    border-radius: 50%;\n`;
-            } else if (selection.shape === 'polygon' && selection.polygonPoints) {
-                const clipPath = `polygon(${selection.polygonPoints.map(p => `${p.x}% ${p.y}%`).join(', ')})`;
-                cssCode += `    clip-path: ${clipPath};\n`;
-            }
-
-            // 添加視覺效果和交互
-            cssCode += `    background-color: rgba(0, 123, 255, 0.3);
-    transition: background-color 0.3s ease;
-}
-
-#${selection.name}:hover {
-    background-color: rgba(0, 123, 255, 0.5);
-}
-`;
-
-            // 創建HTML元素 - 使用ID而非class
-            htmlCode += `<div id="${selection.name}" ${selection.description ? `data-description="${selection.description.replace(/"/g, '&quot;')}"` : ''} onclick="handleAreaClick(this);"></div>\n`;
+        // 建立 HTML 片段，使用 Tailwind class 和 inline style for positioning
+        selections.forEach(sel => {
+            const left = (sel.left * 100).toFixed(2);
+            const top = (sel.top * 100).toFixed(2);
+            const width = (sel.width * 100).toFixed(2);
+            const height = (sel.height * 100).toFixed(2);
+            htmlCode += `<div id="${sel.name}"
+                 class="absolute ${sel.shape === 'circle' ? 'rounded-full ' : ''}cursor-pointer bg-blue-300 hover:bg-blue-500 transition-colors duration-200"
+                 style="left: ${left}%; top: ${top}%; width: ${width}%; height: ${height}%"
+                 ${sel.scrollSelector ? `data-scroll-selector=\"${sel.scrollSelector}\"` : ''}
+                 ${sel.externalLink ? `data-external-link=\"${sel.externalLink}\"` : ''}
+                 ${sel.pid ? `data-pid=\"${sel.pid}\"` : ''}></div>\n`;
         });
-        
-        // 添加交互式JS
-        let jsCode = `
-<script>
-function handleAreaClick(element) {
-    alert('點擊了: ' + element.id + (element.dataset.description ? ' - ' + element.dataset.description : ''));
-}
-</script>
-`;
-
-        return { cssCode, htmlCode, jsCode };
-    }
-    
-    function generateFullCode() {
-        let code = '<!DOCTYPE html>\n<html lang="en">\n<head>\n';
-        code += '    <meta charset="UTF-8">\n';
-        code += '    <meta name="viewport" content="width=device-width, initial-scale=1.0">\n';
-        code += '    <title>Image Selections</title>\n';
-        code += '    <style>\n';
-        code += '        .image-container {\n';
-        code += '            position: relative;\n';
-        code += '            width: 100%;\n';
-        code += '            max-width: 800px;\n';
-        code += '            margin: 0 auto;\n';
-        code += '        }\n';
-        code += '        .image-container img {\n';
-        code += '            width: 100%;\n';
-        code += '            height: auto;\n';
-        code += '            display: block;\n';
-        code += '        }\n';
-        
-        // 添加個別選擇區的樣式 - 使用ID
-        selections.forEach(selection => {
-            code += `        #${selection.name} {\n`;
-            code += `            position: absolute;\n`;
-            code += `            left: ${(selection.left * 100).toFixed(2)}%;\n`;
-            code += `            top: ${(selection.top * 100).toFixed(2)}%;\n`;
-            code += `            width: ${(selection.width * 100).toFixed(2)}%;\n`;
-            code += `            height: ${(selection.height * 100).toFixed(2)}%;\n`;
-            
-            // 根據形狀添加對應的CSS
-            if (selection.shape === 'circle') {
-                code += `            border-radius: 50%;\n`;
-            } else if (selection.shape === 'polygon' && selection.polygonPoints) {
-                code += `            clip-path: polygon(${selection.polygonPoints.map(p => `${p.x}% ${p.y}%`).join(', ')});\n`;
-            }
-            
-            code += `            background-color: rgba(0, 123, 255, 0.3);\n`;
-            code += `            cursor: pointer;\n`;
-            
-            // 添加懸停效果
-            code += `        }\n`;
-            code += `        #${selection.name}:hover {\n`;
-            code += `            background-color: rgba(0, 123, 255, 0.5);\n`;
-            code += `        }\n`;
-        });
-        
-        // 添加HTML結構
-        code += '    </style>\n';
-        code += '</head>\n<body>\n';
-        code += '    <div class="image-container">\n';
-        code += `        <img src="${uploadedImage.src}" alt="Selected Image">\n`;
-        
-        // 添加所有選擇區的HTML - 使用ID
-        selections.forEach(selection => {
-            code += `        <div id="${selection.name}" ${selection.description ? `data-description="${selection.description}"` : ''}></div>\n`;
-        });
-        
-        code += '    </div>\n';
-        
-        // 添加點擊處理的JavaScript
-        code += '    <script>\n';
-        code += '        document.addEventListener("DOMContentLoaded", function() {\n';
-        
-        // 為每個選擇區添加點擊事件
-        selections.forEach(selection => {
-            code += `            document.getElementById("${selection.name}").addEventListener("click", function() {\n`;
-            code += `                alert("點擊了: ${selection.name}" + (this.dataset.description ? " - " + this.dataset.description : ""));\n`;
-            code += '            });\n';
-        });
-        
-        code += '        });\n';
-        code += '    </script>\n';
-        code += '</body>\n</html>';
-        
-        return code;
+        // JS 交互函式
+        jsCode = `<script>
+    // 平滑滾動
+    function scrollToSelector(selector) {
+    const el = document.querySelector(selector);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
-    // 修改處理多邊形點擊事件函數，使用間接事件綁定方式解決冒泡問題
-    function setupPolygonDrawing() {
-        // 直接在圖片容器上添加點擊事件，專門處理多邊形繪製
-        imageContainer.addEventListener('click', handlePolygonContainerClick);
+    // 外部連結
+    function openLinkUrl(url) {
+    window.open(url, '_blank', 'noopener');
     }
 
-    // 在DOMContentLoaded事件末尾調用
-    setupPolygonDrawing();
+    // 購物車
+    function addToCart(pid) {
+    alert('已添加到購物車，PID: ' + pid);
+    }
 
-    // 處理圖片容器點擊，專門用於多邊形繪製
-    function handlePolygonContainerClick(e) {
-        // 只在多邊形模式下處理
-        if (currentShape !== 'polygon') {
-            return;
-        }
-        
-        // 確保我們不在拖拽或調整大小狀態
-        if (isResizing || (selectedElement && !isDrawingPolygon)) {
-            return;
-        }
-        
-        // 如果點擊的是多邊形以外的元素或者當前正在繪製多邊形
-        if (isDrawingPolygon || e.target === imageContainer || e.target === uploadedImage) {
-            const rect = imageContainer.getBoundingClientRect();
-            const offsetX = e.clientX - rect.left;
-            const offsetY = e.clientY - rect.top;
-            
-            // 獲取圖片位置
-            const imgRect = uploadedImage.getBoundingClientRect();
-            
-            // 確保點擊在圖片上
-            if (
-                offsetX >= imgRect.left - rect.left && 
-                offsetX <= imgRect.right - rect.left && 
-                offsetY >= imgRect.top - rect.top && 
-                offsetY <= imgRect.bottom - rect.top
-            ) {
-                handlePolygonClick(offsetX, offsetY, imgRect, rect, e);
-                e.stopPropagation(); // 阻止事件冒泡
-                e.preventDefault(); // 阻止默認行為
-            }
-        }
+    // 點擊執行
+    function handleSelectionAction(el) {
+    const data = el.dataset;
+    if (data.scrollSelector) { scrollToSelector(data.scrollSelector); return; }
+    if (data.externalLink) { openLinkUrl(data.externalLink); return; }
+    if (data.pid) { addToCart(data.pid); return; }
+    alert('尚未設定任何動作');
+    }
+
+    //滾動
+    function scrollToSelector(selector) {
+      const el = document.querySelector(selector);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    //連結
+    function openLinkUrl(url) {
+      window.open(url, '_blank', 'noopener');
+    }
+
+    //購物車
+    function addToCart(pid) {
+      alert('已添加到購物車，PID: ' + pid);
+    }
+
+    function handleSelectionAction(el) {
+      const data = el.dataset;
+      if (data.scrollSelector) { scrollToSelector(data.scrollSelector); return; }
+      if (data.externalLink) { openLinkUrl(data.externalLink); return; }
+      if (data.pid) { addToCart(data.pid); return; }
+      alert('尚未設定任何動作');
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('#${imageContainer.id} > div').forEach(el => {
+        el.addEventListener('click', () => handleSelectionAction(el));
+      });
+    });
+
+    // 綁定事件
+    document.querySelectorAll('div[id^="selection-"]').forEach(el => {
+    el.addEventListener('click', () => handleSelectionAction(el));
+    });
+</script>`;
+        return { htmlCode, jsCode };
+    }
+
+    // 生成包含 Tailwind CSS 與動作函式的完整 HTML
+    function generateFullCode(useBase64 = true) {
+        const imgSrc = useBase64 ? uploadedImage.src : '';
+        let html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Image Selections</title>
+</head>
+<body class="bg-white p-4">
+  <div class="relative w-full max-w-[800px] mx-auto">
+    <img src="${imgSrc}" alt="Selected Image" class="w-full block">
+`;
+        // 插入選區元素
+        selections.forEach(sel => {
+            const left = (sel.left * 100).toFixed(2);
+            const top = (sel.top * 100).toFixed(2);
+            const width = (sel.width * 100).toFixed(2);
+            const height = (sel.height * 100).toFixed(2);
+            html += `<div id="${sel.name}"
+                 class="absolute ${sel.shape === 'circle' ? 'rounded-full' : ''} cursor-pointer bg-blue-300 hover:bg-blue-500 transition-colors duration-200"
+                 style="left: ${left}%; top: ${top}%; width: ${width}%; height: ${height}%"
+                 ${sel.scrollSelector ? `data-scroll-selector="${sel.scrollSelector}"` : ''}
+                 ${sel.externalLink ? `data-external-link="${sel.externalLink}"` : ''}
+                 ${sel.pid ? `data-pid="${sel.pid}"` : ''}></div>
+`;
+        });
+        // 動作函式與事件綁定
+        html += `  </div>
+  <script>
+    function scrollToSelector(selector) {
+      const el = document.querySelector(selector);
+      if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    function openLinkUrl(url) {
+      window.open(url, '_blank', 'noopener');
+    }
+    function addToCart(pid) {
+      alert('已添加到購物車，PID: ' + pid);
+    }
+    function handleSelectionAction(el) {
+      const data = el.dataset;
+      if (data.scrollSelector) { scrollToSelector(data.scrollSelector); return; }
+      if (data.externalLink) { openLinkUrl(data.externalLink); return; }
+      if (data.pid) { addToCart(data.pid); return; }
+      alert('尚未設定任何動作');
+    }
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('#${imageContainer.id} > div').forEach(el => {
+        el.addEventListener('click', () => handleSelectionAction(el));
+      });
+    });
+  <\/script>
+</body>
+</html>`;
+        return html;
     }
 });
