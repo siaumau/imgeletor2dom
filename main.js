@@ -1139,12 +1139,61 @@ document.addEventListener('DOMContentLoaded', function() {
     };
 
     // 配置動作：滑動到 DOM、外部連結、加入購物車
+    function promptSelect(title, options, defaultValue) {
+        return new Promise((resolve) => {
+            const modalBg = document.createElement('div');
+            modalBg.style = 'position: fixed; top: 0; left: 0; width:100%; height:100%; background: rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999;';
+            const modal = document.createElement('div');
+            modal.style = 'background:#fff;padding:20px;border-radius:5px;min-width:200px;';
+            const titleEl = document.createElement('div');
+            titleEl.textContent = title;
+            titleEl.style = 'margin-bottom:10px;font-weight:bold;';
+            modal.appendChild(titleEl);
+            const select = document.createElement('select');
+            select.style = 'width:100%;margin-bottom:10px;';
+            options.forEach(opt => {
+                const option = document.createElement('option');
+                option.value = opt;
+                option.textContent = opt;
+                if (opt === defaultValue) option.selected = true;
+                select.appendChild(option);
+            });
+            modal.appendChild(select);
+            const btnOk = document.createElement('button');
+            btnOk.textContent = '確定';
+            btnOk.style = 'margin-right:10px;';
+            const btnCancel = document.createElement('button');
+            btnCancel.textContent = '取消';
+            modal.appendChild(btnOk);
+            modal.appendChild(btnCancel);
+            modalBg.appendChild(modal);
+            document.body.appendChild(modalBg);
+            btnOk.addEventListener('click', () => {
+                const val = select.value;
+                document.body.removeChild(modalBg);
+                resolve(val);
+            });
+            btnCancel.addEventListener('click', () => {
+                document.body.removeChild(modalBg);
+                resolve(null);
+            });
+        });
+    }
+
     function configureAction(type, id) {
         const selection = selections.find(s => s.id === id);
         if (!selection) return;
         if (type === 'scroll') {
-            const selector = prompt('請輸入要滾動到的 DOM 選擇器（CSS selector）：', selection.scrollSelector || '');
-            if (selector !== null) selection.scrollSelector = selector;
+            const ids = selections.map(s => '#' + s.id);
+            promptSelect('請選擇要滾動到的元素', ids, selection.scrollSelector || ids[0])
+                .then(selector => {
+                    if (selector !== null) {
+                        selection.scrollSelector = selector;
+                        updateSelectionsList();
+                        updateOutputResult();
+                    }
+                });
+            return;
         } else if (type === 'link') {
             const url = prompt('請輸入外部連結 URL：', selection.externalLink || '');
             if (url !== null) selection.externalLink = url;
