@@ -1417,12 +1417,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const top = (sel.top * 100).toFixed(2);
             const width = (sel.width * 100).toFixed(2);
             const height = (sel.height * 100).toFixed(2);
+            // 構建 onclick 屬性，優先 scrollSelector，再 externalLink，再 pid
+            let onclickAttr = '';
+            if (sel.scrollSelector) onclickAttr = ` onclick="scrollToSelector('${sel.scrollSelector}')"`;
+            else if (sel.externalLink) onclickAttr = ` onclick="openLinkUrl('${sel.externalLink}')"`;
+            else if (sel.pid) onclickAttr = ` onclick="addToCart('${sel.pid}')"`;
             htmlCode += `<div id="${sel.name}"
-                 class="absolute ${sel.shape === 'circle' ? 'rounded-full ' : ''}cursor-pointer bg-blue-300 hover:bg-blue-500 transition-colors duration-200"
-                 style="left: ${left}%; top: ${top}%; width: ${width}%; height: ${height}%"
-                 ${sel.scrollSelector ? `data-scroll-selector=\"${sel.scrollSelector}\"` : ''}
-                 ${sel.externalLink ? `data-external-link=\"${sel.externalLink}\"` : ''}
-                 ${sel.pid ? `data-pid=\"${sel.pid}\"` : ''}></div>\n`;
+                 class="absolute ${sel.shape === 'circle' ? 'rounded-full ' : ''}cursor-pointer   transition-colors duration-200"
+                 style="left: ${left}%; top: ${top}%; width: ${width}%; height: ${height}%"${onclickAttr}></div>\n`;
         });
         // JS 交互函式
         jsCode = `<script>
@@ -1476,14 +1478,10 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('#${imageContainer.id} > div').forEach(el => {
-        el.addEventListener('click', () => handleSelectionAction(el));
-      });
-    });
-
-    // 綁定事件
-    document.querySelectorAll('div[id^="selection-"]').forEach(el => {
-    el.addEventListener('click', () => handleSelectionAction(el));
+      document.querySelectorAll('#imageContainer .relative > div[id^="selection-"]')
+        .forEach(el => {
+          el.addEventListener('click', () => handleSelectionAction(el));
+        });
     });
 </script>`;
         return { htmlCode, jsCode };
@@ -1498,6 +1496,7 @@ document.addEventListener('DOMContentLoaded', function() {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Image Selections</title>
+      <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body id="imageContainer" class="bg-white p-4">
   <div class="relative w-full max-w-[800px] mx-auto">
@@ -1509,19 +1508,21 @@ document.addEventListener('DOMContentLoaded', function() {
             const top = (sel.top * 100).toFixed(2);
             const width = (sel.width * 100).toFixed(2);
             const height = (sel.height * 100).toFixed(2);
+            // inline onclick 呼叫相應函式
+            let onclickAttr = '';
+            if (sel.scrollSelector) onclickAttr = ` onclick="scrollToSelector('${sel.scrollSelector}')"`;
+            else if (sel.externalLink) onclickAttr = ` onclick="openLinkUrl('${sel.externalLink}')"`;
+            else if (sel.pid) onclickAttr = ` onclick="addToCart('${sel.pid}')"`;
             html += `<div id="${sel.name}"
-                 class="absolute ${sel.shape === 'circle' ? 'rounded-full' : ''} cursor-pointer bg-blue-300 hover:bg-blue-500 transition-colors duration-200"
-                 style="left: ${left}%; top: ${top}%; width: ${width}%; height: ${height}%"
-                 ${sel.scrollSelector ? `data-scroll-selector="${sel.scrollSelector}"` : ''}
-                 ${sel.externalLink ? `data-external-link="${sel.externalLink}"` : ''}
-                 ${sel.pid ? `data-pid="${sel.pid}"` : ''}></div>
+                 class="absolute ${sel.shape === 'circle' ? 'rounded-full' : ''} cursor-pointer   transition-colors duration-200"
+                 style="left: ${left}%; top: ${top}%; width: ${width}%; height: ${height}%"${onclickAttr}></div>
 `;
         });
         // 動作函式與事件綁定
         html += `  </div>
   <script>
     function scrollToSelector(selector) {
-      const el = document.querySelector(selector);
+      const el = document.querySelector('#' +selector);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     function openLinkUrl(url) {
@@ -1537,11 +1538,6 @@ document.addEventListener('DOMContentLoaded', function() {
       if (data.pid) { addToCart(data.pid); return; }
       alert('尚未設定任何動作');
     }
-    document.addEventListener('DOMContentLoaded', () => {
-      document.querySelectorAll('#${imageContainer.id} > div').forEach(el => {
-        el.addEventListener('click', () => handleSelectionAction(el));
-      });
-    });
   <\/script>
 </body>
 </html>`;
