@@ -1141,35 +1141,52 @@ document.addEventListener('DOMContentLoaded', function() {
     // 配置動作：滑動到 DOM、外部連結、加入購物車
     function promptSelect(title, options, defaultValue) {
         return new Promise((resolve) => {
+            // 遮罩背景
             const modalBg = document.createElement('div');
-            modalBg.style = 'position: fixed; top: 0; left: 0; width:100%; height:100%; background: rgba(0,0,0,0.5); display:flex; align-items:center; justify-content:center; z-index:9999;';
+            modalBg.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center';
+            // Modal 容器
             const modal = document.createElement('div');
-            modal.style = 'background:#fff;padding:20px;border-radius:5px;min-width:200px;';
-            const titleEl = document.createElement('div');
+            modal.className = 'bg-white p-6 rounded-xl shadow-lg w-80';
+            // 標題
+            const titleEl = document.createElement('h3');
+            titleEl.className = 'text-lg font-semibold mb-4';
             titleEl.textContent = title;
-            titleEl.style = 'margin-bottom:10px;font-weight:bold;';
             modal.appendChild(titleEl);
-            const select = document.createElement('select');
-            select.style = 'width:100%;margin-bottom:10px;';
+            // 下拉選單
+            const selectEl = document.createElement('select');
+            selectEl.className = 'w-full border border-gray-300 rounded px-3 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500';
+            // 支援字串或物件格式選項
             options.forEach(opt => {
-                const option = document.createElement('option');
-                option.value = opt;
-                option.textContent = opt;
-                if (opt === defaultValue) option.selected = true;
-                select.appendChild(option);
+                const optionEl = document.createElement('option');
+                if (typeof opt === 'object') {
+                    optionEl.value = opt.value;
+                    optionEl.textContent = opt.text;
+                    if (opt.value === defaultValue) optionEl.selected = true;
+                } else {
+                    optionEl.value = opt;
+                    optionEl.textContent = opt;
+                    if (opt === defaultValue) optionEl.selected = true;
+                }
+                selectEl.appendChild(optionEl);
             });
-            modal.appendChild(select);
-            const btnOk = document.createElement('button');
-            btnOk.textContent = '確定';
-            btnOk.style = 'margin-right:10px;';
+            modal.appendChild(selectEl);
+            // 按鈕區
+            const btnContainer = document.createElement('div');
+            btnContainer.className = 'flex justify-end space-x-2';
             const btnCancel = document.createElement('button');
+            btnCancel.className = 'px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400';
             btnCancel.textContent = '取消';
-            modal.appendChild(btnOk);
-            modal.appendChild(btnCancel);
+            const btnOk = document.createElement('button');
+            btnOk.className = 'px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600';
+            btnOk.textContent = '確定';
+            btnContainer.appendChild(btnCancel);
+            btnContainer.appendChild(btnOk);
+            modal.appendChild(btnContainer);
             modalBg.appendChild(modal);
             document.body.appendChild(modalBg);
+            // 綁定事件
             btnOk.addEventListener('click', () => {
-                const val = select.value;
+                const val = selectEl.value;
                 document.body.removeChild(modalBg);
                 resolve(val);
             });
@@ -1184,8 +1201,11 @@ document.addEventListener('DOMContentLoaded', function() {
         const selection = selections.find(s => s.id === id);
         if (!selection) return;
         if (type === 'scroll') {
-            const ids = selections.map(s => '#' + s.id);
-            promptSelect('請選擇要滾動到的元素', ids, selection.scrollSelector || ids[0])
+            const opts = selections.map(s => ({
+                value: '#' + s.name,
+                text: s.description ? `${s.description} (#${s.name})` : `#${s.name}`
+            }));
+            promptSelect('請選擇要滾動到的元素', opts, selection.scrollSelector || opts[0].value)
                 .then(selector => {
                     if (selector !== null) {
                         selection.scrollSelector = selector;
