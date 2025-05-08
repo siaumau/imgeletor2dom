@@ -1629,12 +1629,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 獲取當前選取的區域
     function getSelectedAreas() {
-        return selections.map(selection => {
-            return {
-                id: selection.id,
-                // 可以根據需要添加其他屬性
-            };
-        });
+        // 假設 selections 是一個全局變數，存儲當前選取的區域
+        return selections; // 返回當前選取的區域
     }
 
     document.getElementById('aiRecognitionBtn').addEventListener('click', async () => {
@@ -1658,9 +1654,9 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log('合併後的圖片數據:', mergedImageData);
 
         // 顯示合併後的圖片
-        const previewImage = document.getElementById('previewImage'); // 確保有一個 <img> 標籤用於顯示圖片
+        const previewImage = document.getElementById('aiRecognitionBtn'); // 確保有一個 <img> 標籤用於顯示圖片
         previewImage.src = mergedImageData; // 設置合併後的圖片數據
-        previewImage.classList.remove('hidden'); // 顯示圖片
+
 
         // 顯示選取的圖片影像內容
         const imageDisplayContainer = document.getElementById('imageDisplayContainer'); // 確保有一個 <div> 用於顯示圖片
@@ -1671,6 +1667,8 @@ document.addEventListener('DOMContentLoaded', function() {
             imgElement.alt = '合併後的圖片';
             imgElement.style.maxWidth = '100%'; // 設置圖片最大寬度
             imageDisplayContainer.appendChild(imgElement); // 將圖片添加到顯示容器中
+
+            document.getElementById('confirmAiRecognitionBtn').classList.remove('hidden'); // 顯示圖片
         } else {
             console.error('找不到 ID 為 imageDisplayContainer 的元素');
         }
@@ -1692,47 +1690,135 @@ document.addEventListener('DOMContentLoaded', function() {
     // 呼叫 OpenAI API
     async function callOpenAIWithImage(imageBase64) {
         const apiKey = ''; // 請妥善保管，不要公開
-        const response = await fetch('https://api.openai.com/v1/chat/completions', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${apiKey}`
-            },
-            body: JSON.stringify({
-                model: "gpt-4o",
-                messages: [
-                    {
-                        role: "user",
-                        content: [
-                            {
-                                type: "text",
-                                text: "請幫我分析這張圖片內容，我每個區塊的右上都有一個ID，請幫我分析這張圖片內容，並且把每個區塊的ID和內容用JSON格式回傳給我"
-                            },
-                            {
-                                type: "image_url",
-                                image_url: {
-                                    url: `data:image/jpeg;base64,${imageBase64.split(',')[1]}` // 確保只傳遞 base64 部分
-                                }
-                            }
-                        ]
-                    }
-                ],
-                max_tokens: 1000
-            })
-        });
-        if (!response.ok) {
-            const errorText = await response.text();
-            throw new Error(`API 錯誤: ${response.statusText}\n${errorText}`);
-        }
 
-        const data = await response.json();
-        return data.choices[0].message.content;
+        try {
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${apiKey}`
+                },
+                body: JSON.stringify({
+                    model: "gpt-4o-mini",
+                    messages: [
+                        {
+                            role: "user",
+                            content: [
+                                {
+                                    type: "text",
+                                    text: "請幫我分析這張圖片內容，我每個區塊的右上都有一個ID，請幫我分析這張圖片文字，並且把每個區塊的ID和內容用JSON格式回傳給我"
+                                },
+                                {
+                                    type: "image_url",
+                                    image_url: {
+                                        url: `data:image/jpeg;base64,${imageBase64.split(',')[1]}` // 確保只傳遞 base64 部分
+                                    }
+                                }
+                            ]
+                        }
+                    ],
+                    max_tokens: 1000,
+                    response_format: { type: "json_object" } // 明確指定回傳 JSON 格式
+                })
+            });
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`API 錯誤: ${response.statusText}\n${errorText}`);
+            }
+
+            const data = await response.json();
+            return data.choices[0].message.content; // 這已經是 JSON 字串格式
+        } catch (error) {
+            console.error("調用 API 時發生錯誤:", error);
+            return JSON.stringify({
+                success: false,
+                error: error.message
+            });
+        }
+    }
+
+    // 使用函數的範例
+    async function processImage(imageDataUrl) {
+        try {
+            const jsonResponse = await callOpenAIWithImage(imageDataUrl);
+
+            // 將 JSON 字串解析為 JavaScript 物件
+            const parsedData = JSON.parse(jsonResponse);
+
+            // 現在你可以使用這個物件做進一步處理
+            console.log("解析後的數據:", parsedData);
+
+            // 例如：顯示所有區塊的 ID
+            if (parsedData.blocks) {
+                parsedData.blocks.forEach(block => {
+                    console.log(`區塊 ID: ${block.id}, 內容: ${block.content}`);
+                });
+            }
+
+            return parsedData;
+        } catch (error) {
+            console.error("處理圖片時發生錯誤:", error);
+            return {
+                success: false,
+                error: error.message
+            };
+        }
     }
 
     // 顯示識別結果
     function displayRecognitionResult(result) {
         const recognizedTextDiv = document.getElementById('recognizedText');
-        recognizedTextDiv.innerText = result; // 將識別結果顯示在指定區域
+        recognizedTextDiv.innerHTML = ''; // 清空之前的內容
+
+        try {
+            // 將 result 字串解析為 JSON 物件
+            const parsedResult = JSON.parse(result);
+            console.log('Parsed Result:', parsedResult); // 調試輸出
+
+            // 檢查是否有 choices 屬性
+            if (parsedResult.choices && Array.isArray(parsedResult.choices) && parsedResult.choices.length > 0) {
+                const contentString = parsedResult.choices[0].message.content; // 提取 content
+
+                // 解析 content 中的 JSON 字符串
+                const jsonData = JSON.parse(contentString); // 直接解析 content
+
+                // 檢查是否有 blocks 屬性
+                if (jsonData.blocks && Array.isArray(jsonData.blocks)) {
+                    jsonData.blocks.forEach(item => {
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'result-item';
+
+                        // 顯示每個鍵值對
+                        for (const [key, value] of Object.entries(item)) {
+                            const keyValueDiv = document.createElement('div');
+                            keyValueDiv.textContent = `${key}: ${value}`;
+                            itemDiv.appendChild(keyValueDiv);
+                        }
+
+                        recognizedTextDiv.appendChild(itemDiv);
+                    });
+                } else {
+                    recognizedTextDiv.textContent = '辨識異常'; // 無法解析的情況
+                }
+            } else {
+                recognizedTextDiv.textContent = '辨識異常'; // 無法解析的情況
+            }
+        } catch (error) {
+            recognizedTextDiv.textContent = '辨識異常'; // JSON 解析錯誤
+            console.error('解析錯誤:', error);
+        }
+    }
+
+    // Extract just the JSON part from the markdown code block
+    function extractJSONFromMarkdown(markdownText) {
+        const regex = /```json\n([\s\S]*?)\n```/;
+        const match = markdownText.match(regex);
+
+        if (match && match[1]) {
+            return match[1]; // 返回提取的 JSON 字符串
+        }
+        return null; // 如果沒有匹配，返回 null
     }
 
     function mergeSelectionsToImage() {
@@ -1764,4 +1850,25 @@ document.addEventListener('DOMContentLoaded', function() {
 
         return canvas.toDataURL('image/jpeg', 0.7); // 返回合併後的圖片數據
     }
+
+    document.getElementById('confirmAiRecognitionBtn').addEventListener('click', async () => {
+        const mergedImageData = mergeSelectionsToImage(); // 獲取合併後的圖片數據
+
+        // 呼叫 OpenAI API
+        const recognizedText = await callOpenAIWithImage(mergedImageData); // 將合併後的圖片數據傳遞給 API
+
+        // 顯示識別結果
+        displayRecognitionResult(recognizedText);
+    });
 });
+
+
+function scrollToSelector(selector) {
+    const el = document.querySelector(selector);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+
+
+
+

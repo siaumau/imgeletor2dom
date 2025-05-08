@@ -64,18 +64,19 @@
                     </div>
                 </div>
 
-                <div class="flex-1 min-w-[200px] flex justify-end gap-2">
+                    <div class="flex-1 min-w-[200px] flex justify-end gap-2">
 
-                    <button id="finishBtn" class="btn-success flex items-center justify-center bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md shadow-sm" data-tooltip="生成代碼和預覽">
-                        <i class="fas fa-check mr-2"></i>完成
-                    </button>
-                    <button id="resetBtn" class="btn-danger flex items-center justify-center bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md shadow-sm" data-tooltip="清除所有選區">
-                        <i class="fas fa-trash-alt mr-2"></i>重置
-                    </button>
-                    <button id="aiRecognitionBtn" class="btn-primary flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm" data-tooltip="識別選取的文字">
-                        <i class="fas fa-robot mr-2"></i>AI 辨識
-                    </button>
-                </div>
+                        <button id="finishBtn" class="btn-success flex items-center justify-center bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-md shadow-sm" data-tooltip="生成代碼和預覽">
+                            <i class="fas fa-check mr-2"></i>完成
+                        </button>
+                        <button id="resetBtn" class="btn-danger flex items-center justify-center bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md shadow-sm" data-tooltip="清除所有選區">
+                            <i class="fas fa-trash-alt mr-2"></i>重置
+                        </button>
+                        <button id="aiRecognitionBtn" onclick="scrollToSelector('#preview')" class="btn-primary flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm" data-tooltip="識別選取的文字">
+                            <i class="fas fa-robot mr-2"></i>AI
+                        </button>
+
+                    </div>
             </div>
         </div>
 
@@ -130,13 +131,33 @@
                                 <strong>提示:</strong> 您可以為每個選區編輯 ID 名稱和添加描述，方便後續管理和使用。
                             </div>
                         </div>
-                        <div id="imageDisplayContainer" class="lg:col-span-1">
+                        <div id="preview"  class="lg:col-span-1">
                             <div class="bg-gray-50 rounded-lg p-4 h-full">
                                 <h2 class="text-xl font-semibold mb-3 flex items-center text-gray-800">
                                     <i class="fas fa-image mr-2 text-indigo-500"></i>圖片顯示區
                                 </h2>
+                                <div id="imageDisplayContainer">
+                                    <div id="loadingIndicator" class="hidden text-center mt-4">
+                                        <p>圖片辨識中...</p>
+                                        <i class="fas fa-spinner fa-spin"></i>
+                                    </div>
+                                </div>
+                                <button id="confirmAiRecognitionBtn" class="btn-primary flex items-center justify-center bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm mt-4 hidden" data-tooltip="確認AI辨識結果">
+                                    <i class="fas fa-check mr-2"></i>辨識選取範圍
+                                </button>
                             </div>
                         </div>
+
+                                <!-- 辨識結果顯示區域 -->
+
+            <div id="recognitionResult" class="mt-4 bg-gray-50 rounded-lg p-4">
+                <h2 class="text-xl font-semibold mb-3 flex items-center text-gray-800">
+                <i class="fas fa-comment-dots mr-2 text-green-500"></i>辨識結果
+            </h2>
+                <div id="recognizedText" class="text-gray-700"></div>
+            </div>
+
+
                     </div>
                 </div>
             </div>
@@ -165,13 +186,7 @@
             </div>
         </div>
 
-        <!-- 辨識結果顯示區域 -->
-        <div id="recognitionResult" class="mt-4 bg-gray-50 rounded-lg p-4">
-            <h2 class="text-xl font-semibold mb-3 flex items-center text-gray-800">
-                <i class="fas fa-comment-dots mr-2 text-green-500"></i>辨識結果
-            </h2>
-            <div id="recognizedText" class="text-gray-700"></div>
-        </div>
+
 
         <!-- 預覽功能 -->
         <div class="mt-8 px-6 pb-6">
@@ -246,6 +261,64 @@
 
             return canvas.toDataURL('image/jpeg', 0.7); // 返回合併後的圖片數據
         }
+
+        document.getElementById('aiRecognitionBtn').addEventListener('click', async () => {
+            const selections = getSelectedAreas(); // 獲取當前選取的區域
+
+            // 提取選取區域的內容
+            const selectedContent = selections.map(selection => {
+                return {
+                    id: selection.id,
+                    // 這裡可以添加其他需要的屬性，例如描述或圖片 URL
+                };
+            });
+
+            // 顯示選取的內容到控制台
+            console.log('選取的內容:', selectedContent);
+
+            // 合併選取區域成一張圖片
+            const mergedImageData = mergeSelectionsToImage();
+
+            // 輸出合併後的圖片數據到控制台
+            console.log('合併後的圖片數據:', mergedImageData);
+
+            // 顯示合併後的圖片
+            const previewImage = document.getElementById('previewImage'); // 確保有一個 <img> 標籤用於顯示圖片
+            previewImage.src = mergedImageData; // 設置合併後的圖片數據
+
+            // 顯示加載指示器
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            loadingIndicator.classList.remove('hidden');
+
+            // 發送請求到 API
+            try {
+                // 假設這裡是發送請求的代碼
+                const response = await sendApiRequest(mergedImageData, selectedContent); // 替換為實際的 API 請求函數
+                // 處理 API 回應
+                displayRecognitionResult(response.data); // 假設 response.data 是識別結果
+            } catch (error) {
+                console.error('API 請求失敗:', error);
+            } finally {
+                // 隱藏加載指示器
+                loadingIndicator.classList.add('hidden');
+            }
+
+            // 顯示選取的圖片影像內容
+            const imageDisplayContainer = document.getElementById('imageDisplayContainer'); // 確保有一個 <div> 用於顯示圖片
+            if (imageDisplayContainer) { // 檢查元素是否存在
+                imageDisplayContainer.innerHTML = ''; // 清空之前的內容
+                const imgElement = document.createElement('img');
+                imgElement.src = mergedImageData; // 設置合併後的圖片數據
+                imgElement.alt = '合併後的圖片';
+                imgElement.style.maxWidth = '100%'; // 設置圖片最大寬度
+                imageDisplayContainer.appendChild(imgElement); // 將圖片添加到顯示容器中
+
+                // 滾動到圖片顯示區
+                imageDisplayContainer.scrollIntoView({ behavior: 'smooth' });
+            } else {
+                console.error('找不到 ID 為 imageDisplayContainer 的元素');
+            }
+        });
     </script>
 </body>
 </html>
