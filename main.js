@@ -1606,7 +1606,7 @@ document.addEventListener('DOMContentLoaded', function() {
         html += `  </div>
   <script>
     function scrollToSelector(selector) {
-      const el = document.querySelector('#' +selector);
+      const el = document.querySelector(selector);
       if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
     function openLinkUrl(url) {
