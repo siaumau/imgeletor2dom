@@ -142,11 +142,16 @@
                     <span class="text-sm text-gray-600 flex items-center">
                         <i class="fas fa-file-code mr-1"></i>HTML 代碼
                     </span>
-                    <button id="copyCodeBtn" class="btn-primary bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-md text-sm flex items-center">
-                        <i class="fas fa-copy mr-1"></i>複製代碼
-                    </button>
+                    <div class="flex gap-2">
+                        <button id="toggleOutputBtn" class="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded-md text-sm flex items-center">
+                            <i class="fas fa-eye mr-1"></i>顯示代碼
+                        </button>
+                        <button id="copyCodeBtn" class="btn-primary bg-gray-600 hover:bg-gray-700 text-white px-3 py-1 rounded-md text-sm flex items-center">
+                            <i class="fas fa-copy mr-1"></i>複製代碼
+                        </button>
+                    </div>
                 </div>
-                <pre id="outputResult" class="bg-gray-800 text-gray-200 p-4 rounded-lg overflow-x-auto text-sm"></pre>
+                <pre id="outputResult" class="hidden bg-gray-800 text-gray-200 p-4 rounded-lg overflow-x-auto text-sm"></pre>
             </div>
         </div>
 

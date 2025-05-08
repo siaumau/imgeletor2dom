@@ -361,6 +361,21 @@ document.addEventListener('DOMContentLoaded', function() {
         document.body.removeChild(textarea);
     });
 
+    // 顯示/隱藏 HTML 代碼切換按鈕
+    const toggleBtn = document.getElementById('toggleOutputBtn');
+    if (toggleBtn) {
+        toggleBtn.addEventListener('click', function() {
+            const pre = document.getElementById('outputResult');
+            if (!pre) return;
+            pre.classList.toggle('hidden');
+            if (pre.classList.contains('hidden')) {
+                this.innerHTML = '<i class="fas fa-eye mr-1"></i>顯示代碼';
+            } else {
+                this.innerHTML = '<i class="fas fa-eye-slash mr-1"></i>隱藏代碼';
+            }
+        });
+    }
+
     // 開始繪製選擇區域
     imageContainer.addEventListener('mousedown', function(e) {
         // 如果圖片尚未上傳，不執行任何操作
