@@ -1628,29 +1628,49 @@ document.addEventListener('DOMContentLoaded', function() {
         return html;
     }
 
-    document.getElementById('aiRecognitionBtn').addEventListener('click', async () => {
-        const selections = getSelectedAreas(); // 假設這個函數能獲取選取的區域
-        const textToRecognize = await getTextFromSelections(selections);
+    // 獲取當前選取的區域
+    function getSelectedAreas() {
+        return selections.map(selection => {
+            return {
+                id: selection.id,
+                // 可以根據需要添加其他屬性
+            };
+        });
+    }
 
-        // 呼叫 OpenAI API
-        const recognizedText = await callOpenAIAPI(textToRecognize);
+    document.getElementById('aiRecognitionBtn').addEventListener('click', async () => {
+        const selections = getSelectedAreas(); // 獲取當前選取的區域
+        const imageUrls = await getImageUrlsFromSelections(selections); // 獲取選取的圖片 URL
+
+        // 合併選取區域成一張圖片
+        const mergedImageData = mergeSelectionsToImage();
+
+        // 輸出合併後的圖片數據到控制台
+        console.log('合併後的圖片數據:', mergedImageData);
+
+        // 呼叫 OpenAI API，這裡您可能需要根據需求調整
+        const recognizedText = await callOpenAIWithImage(mergedImageData); // 將合併後的圖片數據傳遞給 API
 
         // 顯示識別結果
         displayRecognitionResult(recognizedText);
     });
 
-    // 獲取選取區域的文字
-    async function getTextFromSelections(selections) {
-        let combinedText = '';
+    // 獲取選取區域的圖片 URL
+    async function getImageUrlsFromSelections(selections) {
+        let imageUrls = [];
         selections.forEach(selection => {
-            combinedText += selection.text + ' '; // 假設每個選取區域都有一個 text 屬性
+            // 假設每個選取區域都有一個 image 元素
+            const imgElement = document.getElementById(selection.id).querySelector('img');
+            if (imgElement) {
+                imageUrls.push(imgElement.src); // 獲取圖片的 URL
+            }
         });
-        return combinedText.trim();
+        return imageUrls;
     }
 
     // 呼叫 OpenAI API
-    async function callOpenAIAPI(text) {
-        const apiKey = ''; // 你的 API 金鑰
+    async function callOpenAIWithImage(imageBase64) {
+        const apiKey = ''; // 請妥善保管，不要公開
         const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -1658,23 +1678,73 @@ document.addEventListener('DOMContentLoaded', function() {
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                model: "gpt-4o-mini", // 或 "gpt-4"
-                messages: [{ role: "user", content: text }],
-                max_tokens: 100 // 根據需要調整
+                model: "gpt-4o",
+                messages: [
+                    {
+                        role: "user",
+                        content: [
+                            {
+                                type: "text",
+                                text: "請幫我分析這張圖片內容"
+                            },
+                            {
+                                type: "image_url",
+                                image_url: {
+                                    url: `data:image/jpeg;base64,${imageBase64.split(',')[1]}` // 確保只傳遞 base64 部分
+                                }
+                            }
+                        ]
+                    }
+                ],
+                max_tokens: 1000
             })
         });
-
         if (!response.ok) {
-            throw new Error('Network response was not ok');
+            const errorText = await response.text();
+            throw new Error(`API 錯誤: ${response.statusText}\n${errorText}`);
         }
 
         const data = await response.json();
-        return data.choices[0].message.content; // 根據 API 回應格式調整
+        return data.choices[0].message.content;
     }
 
     // 顯示識別結果
     function displayRecognitionResult(result) {
         const recognizedTextDiv = document.getElementById('recognizedText');
         recognizedTextDiv.innerText = result; // 將識別結果顯示在指定區域
+    }
+
+    function mergeSelectionsToImage() {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        // 設置畫布大小
+        canvas.width = imageWidth; // 使用上傳圖片的寬度
+        canvas.height = imageHeight; // 使用上傳圖片的高度
+
+        // 繪製上傳的圖片
+        ctx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
+
+        // 繪製選取的區域
+        selections.forEach(selection => {
+            const left = selection.left * canvas.width;
+            const top = selection.top * canvas.height;
+            const width = selection.width * canvas.width;
+            const height = selection.height * canvas.height;
+
+            // 根據選取的形狀繪製區域
+            if (selection.shape === 'rectangle') {
+                ctx.strokeStyle = 'red'; // 設置邊框顏色
+                ctx.strokeRect(left, top, width, height);
+            } else if (selection.shape === 'circle') {
+                ctx.beginPath();
+                ctx.arc(left + width / 2, top + height / 2, width / 2, 0, Math.PI * 2);
+                ctx.strokeStyle = 'red'; // 設置邊框顏色
+                ctx.stroke();
+            }
+            // 其他形狀的處理...
+        });
+
+        return canvas.toDataURL('image/jpeg', 0.7); // 返回合併後的圖片數據，質量設置為 0.7
     }
 });
