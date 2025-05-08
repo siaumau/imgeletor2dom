@@ -1640,7 +1640,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('aiRecognitionBtn').addEventListener('click', async () => {
         const selections = getSelectedAreas(); // 獲取當前選取的區域
-        const imageUrls = await getImageUrlsFromSelections(selections); // 獲取選取的圖片 URL
+
+        // 提取選取區域的內容
+        const selectedContent = selections.map(selection => {
+            return {
+                id: selection.id,
+                // 這裡可以添加其他需要的屬性，例如描述或圖片 URL
+            };
+        });
+
+        // 顯示選取的內容到控制台
+        console.log('選取的內容:', selectedContent);
 
         // 合併選取區域成一張圖片
         const mergedImageData = mergeSelectionsToImage();
@@ -1648,11 +1658,23 @@ document.addEventListener('DOMContentLoaded', function() {
         // 輸出合併後的圖片數據到控制台
         console.log('合併後的圖片數據:', mergedImageData);
 
-        // 呼叫 OpenAI API，這裡您可能需要根據需求調整
-        const recognizedText = await callOpenAIWithImage(mergedImageData); // 將合併後的圖片數據傳遞給 API
+        // 顯示合併後的圖片
+        const previewImage = document.getElementById('previewImage'); // 確保有一個 <img> 標籤用於顯示圖片
+        previewImage.src = mergedImageData; // 設置合併後的圖片數據
+        previewImage.classList.remove('hidden'); // 顯示圖片
 
-        // 顯示識別結果
-        displayRecognitionResult(recognizedText);
+        // 顯示選取的圖片影像內容
+        const imageDisplayContainer = document.getElementById('imageDisplayContainer'); // 確保有一個 <div> 用於顯示圖片
+        if (imageDisplayContainer) { // 檢查元素是否存在
+            imageDisplayContainer.innerHTML = ''; // 清空之前的內容
+            const imgElement = document.createElement('img');
+            imgElement.src = mergedImageData; // 設置合併後的圖片數據
+            imgElement.alt = '合併後的圖片';
+            imgElement.style.maxWidth = '100%'; // 設置圖片最大寬度
+            imageDisplayContainer.appendChild(imgElement); // 將圖片添加到顯示容器中
+        } else {
+            console.error('找不到 ID 為 imageDisplayContainer 的元素');
+        }
     });
 
     // 獲取選取區域的圖片 URL
@@ -1718,33 +1740,29 @@ document.addEventListener('DOMContentLoaded', function() {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
 
-        // 設置畫布大小
-        canvas.width = imageWidth; // 使用上傳圖片的寬度
-        canvas.height = imageHeight; // 使用上傳圖片的高度
-
-        // 繪製上傳的圖片
-        ctx.drawImage(uploadedImage, 0, 0, canvas.width, canvas.height);
+        // 設置畫布大小為選取區域的總大小
+        const totalWidth = Math.max(...selections.map(s => s.left * imageWidth + s.width * imageWidth));
+        const totalHeight = Math.max(...selections.map(s => s.top * imageHeight + s.height * imageHeight));
+        canvas.width = totalWidth;
+        canvas.height = totalHeight;
 
         // 繪製選取的區域
         selections.forEach(selection => {
-            const left = selection.left * canvas.width;
-            const top = selection.top * canvas.height;
-            const width = selection.width * canvas.width;
-            const height = selection.height * canvas.height;
+            const left = selection.left * imageWidth;
+            const top = selection.top * imageHeight;
+            const width = selection.width * imageWidth;
+            const height = selection.height * imageHeight;
 
-            // 根據選取的形狀繪製區域
-            if (selection.shape === 'rectangle') {
-                ctx.strokeStyle = 'red'; // 設置邊框顏色
-                ctx.strokeRect(left, top, width, height);
-            } else if (selection.shape === 'circle') {
-                ctx.beginPath();
-                ctx.arc(left + width / 2, top + height / 2, width / 2, 0, Math.PI * 2);
-                ctx.strokeStyle = 'red'; // 設置邊框顏色
-                ctx.stroke();
-            }
-            // 其他形狀的處理...
+            // 繪製選取區域
+            ctx.drawImage(uploadedImage, left, top, width, height, left, top, width, height);
+
+            // 設置文本樣式
+            ctx.font = '16px Arial'; // 字體大小和樣式
+            ctx.fillStyle = 'red'; // 字體顏色
+            ctx.textAlign = 'right'; // 右對齊
+            ctx.fillText(selection.id, left + width - 10, top + 20); // 在右上角繪製 ID
         });
 
-        return canvas.toDataURL('image/jpeg', 0.7); // 返回合併後的圖片數據，質量設置為 0.7
+        return canvas.toDataURL('image/jpeg', 0.7); // 返回合併後的圖片數據
     }
 });
