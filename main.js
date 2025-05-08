@@ -67,9 +67,8 @@ document.addEventListener('DOMContentLoaded', function() {
     function generateSelectionId() {
         const now = new Date();
         const pad = n => n.toString().padStart(2,'0');
-        return 'selection-' + now.getFullYear()
-            + pad(now.getMonth()+1) + pad(now.getDate())
-            + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds());
+        return 'S-' +  pad(now.getMonth()+1) + pad(now.getDate())
+            +"-"+  pad(now.getHours()) +pad(now.getMinutes()) +"-"+  pad(now.getSeconds());
     }
 
     // 添加編輯說明的函數
@@ -1707,7 +1706,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         content: [
                             {
                                 type: "text",
-                                text: "請幫我分析這張圖片內容"
+                                text: "請幫我分析這張圖片內容，我每個區塊的右上都有一個ID，請幫我分析這張圖片內容，並且把每個區塊的ID和內容用JSON格式回傳給我"
                             },
                             {
                                 type: "image_url",
@@ -1757,10 +1756,10 @@ document.addEventListener('DOMContentLoaded', function() {
             ctx.drawImage(uploadedImage, left, top, width, height, left, top, width, height);
 
             // 設置文本樣式
-            ctx.font = '16px Arial'; // 字體大小和樣式
-            ctx.fillStyle = 'red'; // 字體顏色
+            ctx.font = '18px Arial'; // 字體大小和樣式
+            ctx.fillStyle = '#fff'; // 字體顏色
             ctx.textAlign = 'right'; // 右對齊
-            ctx.fillText(selection.id, left + width - 10, top + 20); // 在右上角繪製 ID
+            ctx.fillText(selection.id, left + width - 10, top + - 10); // 在右上角繪製 ID
         });
 
         return canvas.toDataURL('image/jpeg', 0.7); // 返回合併後的圖片數據
