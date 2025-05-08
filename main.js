@@ -1650,15 +1650,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // 呼叫 OpenAI API
     async function callOpenAIAPI(text) {
-        const apiKey = 'your_api_key_here'; // 不建議這樣做，應使用後端代理
-        const response = await fetch('YOUR_OPENAI_API_ENDPOINT', {
+        const apiKey = ''; // 你的 API 金鑰
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${apiKey}`
             },
             body: JSON.stringify({
-                prompt: text,
+                model: "gpt-4o-mini", // 或 "gpt-4"
+                messages: [{ role: "user", content: text }],
                 max_tokens: 100 // 根據需要調整
             })
         });
@@ -1668,7 +1669,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
 
         const data = await response.json();
-        return data.choices[0].text; // 根據 API 回應格式調整
+        return data.choices[0].message.content; // 根據 API 回應格式調整
     }
 
     // 顯示識別結果
