@@ -77,7 +77,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectionId = element.id;
         const selection = selections.find(s => s.id === selectionId);
         const currentDescription = selection.description || '';
-        
+
         const description = prompt('請輸入此區域Alt的說明：', currentDescription);
         if (description !== null) {
             selection.description = description;
@@ -92,26 +92,26 @@ document.addEventListener('DOMContentLoaded', function() {
         const selectionId = element.id;
         const selection = selections.find(s => s.id === selectionId);
         const currentId = selection.name;
-        
+
         const newId = prompt('請輸入新的 ID 名稱：', currentId);
         if (newId !== null && newId.trim() !== '' && newId.trim() !== currentId) {
             const trimmedId = newId.trim();
-            
+
             // 檢查ID是否包含空格或特殊字符
             if (/[\s\(\)\[\]\{\}\<\>\,\.\/\\\?\;\:\'\"\!\@\#\$\%\^\&\*\=\+\`\~]/.test(trimmedId)) {
                 alert("ID不能包含空格或特殊字符，只能使用字母、數字、連字符和下劃線。");
                 return;
             }
-            
+
             // 更新選區物件中的名稱
             selection.name = trimmedId;
-            
+
             // 更新顯示標籤的文字
             const label = element.querySelector('.selection-label');
             if (label) {
                 label.textContent = trimmedId;
             }
-            
+
             // 更新選區列表和輸出結果
             updateSelectionsList();
             updateOutputResult();
@@ -152,17 +152,17 @@ document.addEventListener('DOMContentLoaded', function() {
         const file = e.target.files[0];
         if (file) {
             const reader = new FileReader();
-            
+
             reader.onload = function(e) {
                 uploadedImage.src = e.target.result;
                 uploadedImage.classList.remove('hidden');
                 placeholderText.classList.add('hidden');
-                
+
                 // 重置選擇區域
                 selectionsContainer.innerHTML = '';
                 selections = [];
                 updateSelectionsList();
-                
+
                 // 獲取圖片自然尺寸
                 uploadedImage.onload = function() {
                     imageWidth = uploadedImage.naturalWidth;
@@ -171,7 +171,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     updateOutputResult();
                 };
             };
-            
+
             reader.readAsDataURL(file);
         }
     });
@@ -179,74 +179,74 @@ document.addEventListener('DOMContentLoaded', function() {
     // 切換形狀按鈕
     rectangleBtn.addEventListener('click', function() {
         currentShape = 'rectangle';
-        
+
         // 更新按鈕樣式
         rectangleBtn.classList.remove('bg-gray-400');
         rectangleBtn.classList.add('bg-purple-500', 'active');
-        
+
         circleBtn.classList.remove('bg-purple-500', 'active');
         circleBtn.classList.add('bg-gray-400');
-        
+
         polygonBtn.classList.remove('bg-purple-500', 'active');
         polygonBtn.classList.add('bg-gray-400');
-        
+
         resetPolygonDrawing();
-        
+
         // 隱藏多邊形提示
         if (polygonHint) {
             polygonHint.style.display = 'none';
         }
-        
+
         // 移除多邊形模式指示
         imageContainer.classList.remove('polygon-active');
     });
 
     circleBtn.addEventListener('click', function() {
         currentShape = 'circle';
-        
+
         // 更新按鈕樣式
         circleBtn.classList.remove('bg-gray-400');
         circleBtn.classList.add('bg-purple-500', 'active');
-        
+
         rectangleBtn.classList.remove('bg-purple-500', 'active');
         rectangleBtn.classList.add('bg-gray-400');
-        
+
         polygonBtn.classList.remove('bg-purple-500', 'active');
         polygonBtn.classList.add('bg-gray-400');
-        
+
         resetPolygonDrawing();
-        
+
         // 隱藏多邊形提示
         if (polygonHint) {
             polygonHint.style.display = 'none';
         }
-        
+
         // 移除多邊形模式指示
         imageContainer.classList.remove('polygon-active');
     });
-    
+
     polygonBtn.addEventListener('click', function() {
         currentShape = 'polygon';
-        
+
         // 更新按鈕樣式
         polygonBtn.classList.remove('bg-gray-400');
         polygonBtn.classList.add('bg-purple-500', 'active');
-        
+
         rectangleBtn.classList.remove('bg-purple-500', 'active');
         rectangleBtn.classList.add('bg-gray-400');
-        
+
         circleBtn.classList.remove('bg-purple-500', 'active');
         circleBtn.classList.add('bg-gray-400');
-        
+
         resetPolygonDrawing();
-        
+
         // 添加多邊形繪製提示
         if (!polygonHint) {
             polygonHint = document.createElement('div');
             polygonHint.className = 'polygon-drawing-hint';
             document.body.appendChild(polygonHint);
         }
-        
+
         polygonHint.innerHTML = `
             <strong>不規則選區繪製:</strong><br>
             1. 點擊圖片上的點來創建多邊形頂點<br>
@@ -254,9 +254,9 @@ document.addEventListener('DOMContentLoaded', function() {
             3. 點擊靠近起始點的位置可閉合多邊形<br>
             4. 50個點後會自動閉合
         `;
-        
+
         polygonHint.style.display = 'block';
-        
+
         // 添加多邊形模式指示
         imageContainer.classList.add('polygon-active');
     });
@@ -267,11 +267,11 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('請先創建至少一個選區');
             return;
         }
-        
+
         const { htmlCode, jsCode } = generateSelectionCode();
         outputResult.textContent = htmlCode + jsCode;
         outputResult.parentElement.classList.remove('hidden');
-        
+
         // 滾動到代碼區域
         outputResult.parentElement.scrollIntoView({ behavior: 'smooth' });
     });
@@ -283,20 +283,20 @@ document.addEventListener('DOMContentLoaded', function() {
         updateSelectionsList();
         updateOutputResult();
     });
-    
+
     // 複製代碼按鈕
     copyCodeBtn.addEventListener('click', function() {
         if (selections.length === 0) {
             alert('尚無選區可複製');
             return;
         }
-        
+
         // 使用臨時textarea來複製內容
         const textarea = document.createElement('textarea');
         textarea.value = outputResult.textContent;
         document.body.appendChild(textarea);
         textarea.select();
-        
+
         try {
             // 嘗試複製到剪貼板
             const successful = document.execCommand('copy');
@@ -311,7 +311,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 `;
                 copyCodeBtn.classList.remove('bg-gray-500', 'hover:bg-gray-600');
                 copyCodeBtn.classList.add('bg-green-500', 'hover:bg-green-600');
-                
+
                 // 2秒後恢復原狀
                 setTimeout(function() {
                     copyCodeBtn.innerHTML = originalText;
@@ -325,11 +325,11 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('複製出錯:', err);
             alert('複製失敗，請手動複製');
         }
-        
+
         // 移除臨時元素
         document.body.removeChild(textarea);
     });
-    
+
     // 複製完整程式碼按鈕
     copyFullCodeBtn.addEventListener('click', function() {
         if (!uploadedImage.src || selections.length === 0) {
@@ -382,124 +382,124 @@ document.addEventListener('DOMContentLoaded', function() {
         if (uploadedImage.classList.contains('hidden')) return;
 
         const target = e.target;
-        
+
         // 處理刪除按鈕點擊 - 這個在任何模式下都可以操作
         if (target.classList.contains('delete-btn')) {
             deleteSelectionInternal(target.parentElement);
             return;
         }
-        
+
         // 處理調整大小的處理器點擊 - 這個在任何模式下都可以操作
         if (target.classList.contains('resize-handle')) {
             isResizing = true;
             resizeHandle = target;
             selectedElement = target.parentElement;
-            
+
             const rect = selectedElement.getBoundingClientRect();
             originalWidth = rect.width;
             originalHeight = rect.height;
             originalLeft = parseInt(selectedElement.style.left);
             originalTop = parseInt(selectedElement.style.top);
-            
+
             document.body.classList.add('resizing');
             return;
         }
-        
+
         // 處理選區拖動 - 這個在任何模式下都可以操作
         if (target.classList.contains('selection-area') || target.closest('.selection-area')) {
             // 如果我們正在繪製多邊形，則直接點擊繼續，不處理拖動
             if (isDrawingPolygon && currentShape === 'polygon') {
                 return;
             }
-            
+
             selectedElement = target.classList.contains('selection-area') ? target : target.closest('.selection-area');
             startX = e.clientX;
             startY = e.clientY;
-            
+
             // 高亮選中的選區
             document.querySelectorAll('.selection-area').forEach(el => {
                 el.classList.remove('selected');
             });
             selectedElement.classList.add('selected');
-            
+
             document.body.classList.add('dragging');
             return;
         }
-        
+
         const rect = imageContainer.getBoundingClientRect();
         const offsetX = e.clientX - rect.left;
         const offsetY = e.clientY - rect.top;
-        
+
         // 相對於圖片的位置比例
         const imgRect = uploadedImage.getBoundingClientRect();
-        
+
         // 確保點擊是在圖片上
         if (
-            offsetX < imgRect.left - rect.left || 
-            offsetX > imgRect.right - rect.left || 
-            offsetY < imgRect.top - rect.top || 
+            offsetX < imgRect.left - rect.left ||
+            offsetX > imgRect.right - rect.left ||
+            offsetY < imgRect.top - rect.top ||
             offsetY > imgRect.bottom - rect.top
         ) {
             return;
         }
-        
+
         // 處理多邊形選區繪製
         if (currentShape === 'polygon') {
             handlePolygonClick(offsetX, offsetY, imgRect, rect, e);
             return;
         }
-        
+
         // 開始矩形或圓形繪製
         isDrawing = true;
         startX = offsetX;
         startY = offsetY;
-        
+
         // 使用時間戳生成新的選區元素 ID
         const selId = generateSelectionId();
         const selectionDiv = document.createElement('div');
         selectionDiv.className = 'selection-area';
         selectionDiv.id = selId;
         selectionDiv.setAttribute('data-name', selId);
-        
+
         if (currentShape === 'circle') {
             selectionDiv.classList.add('circular');
         }
-        
+
         selectionDiv.style.left = startX + 'px';
         selectionDiv.style.top = startY + 'px';
         selectionDiv.style.width = '0';
         selectionDiv.style.height = '0';
-        
+
         // 創建調整大小的把手
         const nwHandle = document.createElement('div');
         nwHandle.className = 'resize-handle nw';
-        
+
         const neHandle = document.createElement('div');
         neHandle.className = 'resize-handle ne';
-        
+
         const swHandle = document.createElement('div');
         swHandle.className = 'resize-handle sw';
-        
+
         const seHandle = document.createElement('div');
         seHandle.className = 'resize-handle se';
-        
+
         // 創建刪除按鈕
         const deleteBtn = document.createElement('div');
         deleteBtn.className = 'delete-btn';
         deleteBtn.textContent = '×';
-        
+
         // 創建標籤
         const label = document.createElement('div');
         label.className = 'selection-label';
         label.textContent = selId;
-        
+
         selectionDiv.appendChild(nwHandle);
         selectionDiv.appendChild(neHandle);
         selectionDiv.appendChild(swHandle);
         selectionDiv.appendChild(seHandle);
         selectionDiv.appendChild(deleteBtn);
         selectionDiv.appendChild(label);
-        
+
         selectionsContainer.appendChild(selectionDiv);
         // 點擊左側選區時，高亮右側清單
         selectionDiv.addEventListener('click', function(evt) {
@@ -507,7 +507,7 @@ document.addEventListener('DOMContentLoaded', function() {
             highlightListItem(selId, 'green');
         });
         selectedElement = selectionDiv;
-        
+
         // 標記容器為繪製狀態
         imageContainer.classList.add('drawing');
     });
@@ -516,21 +516,21 @@ document.addEventListener('DOMContentLoaded', function() {
     function handlePolygonClick(offsetX, offsetY, imgRect, containerRect, event) {
         const imgOffsetLeft = imgRect.left - containerRect.left;
         const imgOffsetTop = imgRect.top - containerRect.top;
-        
+
         // 相對於圖片的坐標
         const relativeX = offsetX - imgOffsetLeft;
         const relativeY = offsetY - imgOffsetTop;
-        
+
         // 確保點擊在圖片內
         if (relativeX < 0 || relativeX > imgRect.width || relativeY < 0 || relativeY > imgRect.height) {
             return;
         }
-        
+
         // 如果這是第一個點，創建多邊形元素
         if (!isDrawingPolygon) {
             isDrawingPolygon = true;
             polygonPoints = [];
-            
+
             // 創建多邊形元素
             currentPolygonElement = document.createElement('div');
             currentPolygonElement.className = 'selection-area polygon-selection';
@@ -538,7 +538,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const polyId = generateSelectionId();
             currentPolygonElement.id = polyId;
             currentPolygonElement.setAttribute('data-name', polyId);
-            
+
             // 創建SVG來繪製多邊形
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
             svg.setAttribute('width', '100%');
@@ -547,42 +547,42 @@ document.addEventListener('DOMContentLoaded', function() {
             svg.style.top = '0';
             svg.style.left = '0';
             svg.style.pointerEvents = 'none';
-            
+
             // 創建多邊形路徑
             const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
             polygon.setAttribute('fill', 'rgba(6, 182, 212, 0.2)');
             polygon.setAttribute('stroke', 'rgb(6, 182, 212)');
             polygon.setAttribute('stroke-width', '2');
             polygon.style.pointerEvents = 'none';
-            
+
             svg.appendChild(polygon);
             currentPolygonElement.appendChild(svg);
-            
+
             // 創建臨時線條用於跟隨鼠標
             temporaryLine = document.createElementNS('http://www.w3.org/2000/svg', 'line');
             temporaryLine.setAttribute('stroke', 'rgb(6, 182, 212)');
             temporaryLine.setAttribute('stroke-width', '2');
             temporaryLine.setAttribute('stroke-dasharray', '5,5');
             svg.appendChild(temporaryLine);
-            
+
             // 先不添加刪除按鈕和標籤，等待多邊形完成後再添加
-            
+
             // 設置初始位置和尺寸
             currentPolygonElement.style.position = 'absolute';
             currentPolygonElement.style.left = imgOffsetLeft + 'px';
             currentPolygonElement.style.top = imgOffsetTop + 'px';
             currentPolygonElement.style.width = imgRect.width + 'px';
             currentPolygonElement.style.height = imgRect.height + 'px';
-            
+
             selectionsContainer.appendChild(currentPolygonElement);
         } else if (polygonPoints.length >= 3) {
             // 檢查是否點擊了第一個點
             const firstPoint = polygonPoints[0];
             const distance = Math.sqrt(
-                Math.pow(relativeX - firstPoint.x, 2) + 
+                Math.pow(relativeX - firstPoint.x, 2) +
                 Math.pow(relativeY - firstPoint.y, 2)
             );
-            
+
             // 如果點擊了第一個點，詢問是否閉合多邊形
             if (distance < CLOSE_DISTANCE_THRESHOLD) {
                 if (confirm('要閉合多邊形嗎？')) {
@@ -598,13 +598,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
             }
         }
-        
+
         // 添加點到數組
         polygonPoints.push({ x: relativeX, y: relativeY });
-        
+
         // 更新多邊形
         updatePolygonPath();
-        
+
         // 創建點的視覺指示
         const pointIndicator = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
         pointIndicator.setAttribute('cx', relativeX);
@@ -614,7 +614,7 @@ document.addEventListener('DOMContentLoaded', function() {
         pointIndicator.setAttribute('stroke', 'white');
         pointIndicator.setAttribute('stroke-width', '2');
         currentPolygonElement.querySelector('svg').appendChild(pointIndicator);
-        
+
         // 為第一個點添加特殊樣式
         if (polygonPoints.length === 1) {
             pointIndicator.setAttribute('r', '5');
@@ -623,7 +623,7 @@ document.addEventListener('DOMContentLoaded', function() {
             pointIndicator.setAttribute('stroke-width', '2.5');
             pointIndicator.classList.add('first-polygon-point');
         }
-        
+
         // 檢查是否要閉合多邊形（超過50個點）
         if (polygonPoints.length >50) {
             if (confirm('已達到50個點，要自動閉合多邊形嗎？')) {
@@ -631,54 +631,54 @@ document.addEventListener('DOMContentLoaded', function() {
                 return;
             }
         }
-        
+
         // 修改：阻止事件冒泡，避免同時觸發其他事件處理器
         if (event) {
             event.stopPropagation();
         }
     }
-    
+
     // 創建一個單獨的函數來處理多邊形繪製中的鼠標移動
     function handlePolygonMouseMove(e) {
         if (!isDrawingPolygon || polygonPoints.length === 0 || !currentPolygonElement) {
             return;
         }
-        
+
         const rect = imageContainer.getBoundingClientRect();
         const offsetX = e.clientX - rect.left;
         const offsetY = e.clientY - rect.top;
-        
+
         const imgRect = uploadedImage.getBoundingClientRect();
         const imgOffsetLeft = imgRect.left - rect.left;
         const imgOffsetTop = imgRect.top - rect.top;
-        
+
         // 計算相對於圖片的坐標
         const relativeX = offsetX - imgOffsetLeft;
         const relativeY = offsetY - imgOffsetTop;
-        
+
         // 更新臨時線條，從最後一點到當前鼠標位置
         const lastPoint = polygonPoints[polygonPoints.length - 1];
-        
+
         if (temporaryLine) {
             temporaryLine.setAttribute('x1', lastPoint.x);
             temporaryLine.setAttribute('y1', lastPoint.y);
             temporaryLine.setAttribute('x2', relativeX);
             temporaryLine.setAttribute('y2', relativeY);
         }
-        
+
         // 檢查是否接近第一個點（僅當有至少3個點時才檢查）
         if (polygonPoints.length >= 3) {
             const firstPoint = polygonPoints[0];
             const distance = Math.sqrt(
-                Math.pow(relativeX - firstPoint.x, 2) + 
+                Math.pow(relativeX - firstPoint.x, 2) +
                 Math.pow(relativeY - firstPoint.y, 2)
             );
-            
+
             // 如果接近第一個點，顯示視覺提示
             if (distance < CLOSE_DISTANCE_THRESHOLD) {
                 if (!isNearFirstPoint) {
                     isNearFirstPoint = true;
-                    
+
                     // 創建或顯示第一個點的高亮效果
                     if (!firstPointHighlight) {
                         firstPointHighlight = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -693,7 +693,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     } else {
                         firstPointHighlight.style.display = 'block';
                     }
-                    
+
                     // 更新提示文字，詢問是否要閉合多邊形
                     if (!isShowingCloseConfirm && polygonHint) {
                         const originalHtml = polygonHint.innerHTML;
@@ -702,19 +702,19 @@ document.addEventListener('DOMContentLoaded', function() {
                             <button id="confirmClosePolygon" class="px-2 py-1 bg-green-500 text-white rounded mr-2">確認閉合</button>
                             <button id="cancelClosePolygon" class="px-2 py-1 bg-gray-500 text-white rounded">繼續編輯</button>
                         `;
-                        
+
                         // 添加按鈕事件
                         document.getElementById('confirmClosePolygon').addEventListener('click', function() {
                             finishPolygon(imgRect, rect);
                             isShowingCloseConfirm = false;
                         });
-                        
+
                         document.getElementById('cancelClosePolygon').addEventListener('click', function() {
                             // 恢復原來的提示
                             polygonHint.innerHTML = originalHtml;
                             isShowingCloseConfirm = false;
                         });
-                        
+
                         isShowingCloseConfirm = true;
                     }
                 }
@@ -725,7 +725,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     if (firstPointHighlight) {
                         firstPointHighlight.style.display = 'none';
                     }
-                    
+
                     // 如果沒有顯示確認對話框，恢復原來的提示
                     if (!isShowingCloseConfirm && polygonHint) {
                         polygonHint.innerHTML = `
@@ -744,22 +744,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // 更新多邊形路徑
     function updatePolygonPath() {
         if (!currentPolygonElement || polygonPoints.length === 0) return;
-        
+
         const svg = currentPolygonElement.querySelector('svg');
         const polygon = svg.querySelector('polygon');
-        
+
         // 更新多邊形路徑
         const pointsString = polygonPoints.map(p => `${p.x},${p.y}`).join(' ');
         polygon.setAttribute('points', pointsString);
     }
-    
+
     // 完成多邊形繪製
     function finishPolygon(imgRect, containerRect) {
         if (!currentPolygonElement || polygonPoints.length < 3) {
             resetPolygonDrawing();
             return;
         }
-        
+
         // 通知用戶多邊形已完成
         if (polygonHint) {
             polygonHint.innerHTML = '<strong>多邊形選區已完成!</strong>';
@@ -767,19 +767,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 polygonHint.style.display = 'none';
             }, 2000);
         }
-        
+
         // 移除臨時線條
         const svg = currentPolygonElement.querySelector('svg');
         const tempLine = svg.querySelector('line');
         if (tempLine) {
             svg.removeChild(tempLine);
         }
-        
+
         // 使用時間戳生成 ID
         const polyId = generateSelectionId();
         currentPolygonElement.id = polyId;
         currentPolygonElement.setAttribute('data-name', polyId);
-        
+
         // 獲取多邊形的邊界
         let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
         polygonPoints.forEach(point => {
@@ -788,20 +788,20 @@ document.addEventListener('DOMContentLoaded', function() {
             maxX = Math.max(maxX, point.x);
             maxY = Math.max(maxY, point.y);
         });
-        
+
         // 確保有效的寬度和高度
         const width = Math.max(10, maxX - minX);
         const height = Math.max(10, maxY - minY);
-        
+
         // 計算相對於圖片的百分比
         const imgWidth = imgRect.width;
         const imgHeight = imgRect.height;
-        
+
         const relativeLeft = minX / imgWidth;
         const relativeTop = minY / imgHeight;
         const relativeWidth = width / imgWidth;
         const relativeHeight = height / imgHeight;
-        
+
         // 調整多邊形坐標相對於新的邊界
         const adjustedPoints = polygonPoints.map(point => {
             return {
@@ -809,22 +809,22 @@ document.addEventListener('DOMContentLoaded', function() {
                 y: Number(((point.y - minY) / height * 100).toFixed(2))
             };
         });
-        
+
         // 更新多邊形位置和大小
         currentPolygonElement.style.left = (imgRect.left - containerRect.left + minX) + 'px';
         currentPolygonElement.style.top = (imgRect.top - containerRect.top + minY) + 'px';
         currentPolygonElement.style.width = width + 'px';
         currentPolygonElement.style.height = height + 'px';
-        
+
         // 更新SVG和多邊形大小
         svg.setAttribute('width', width);
         svg.setAttribute('height', height);
-        
+
         // 更新多邊形路徑
         const polygon = svg.querySelector('polygon');
         const pointsString = adjustedPoints.map(p => `${p.x},${p.y}`).join(' ');
         polygon.setAttribute('points', pointsString);
-        
+
         // 現在添加刪除按鈕和標籤
         const deleteBtn = document.createElement('div');
         deleteBtn.className = 'delete-btn';
@@ -832,15 +832,15 @@ document.addEventListener('DOMContentLoaded', function() {
         deleteBtn.style.position = 'absolute';
         deleteBtn.style.top = '0';
         deleteBtn.style.right = '0';
-        
+
         // 創建標籤
         const label = document.createElement('div');
         label.className = 'selection-label';
         label.textContent = 'selection-' + polyId;
-        
+
         currentPolygonElement.appendChild(deleteBtn);
         currentPolygonElement.appendChild(label);
-        
+
         // 添加到選區列表
         selections.push({
             id: polyId,
@@ -853,9 +853,9 @@ document.addEventListener('DOMContentLoaded', function() {
             elementRef: currentPolygonElement,
             polygonPoints: adjustedPoints
         });
-        
+
         updateSelectionsList();
-        
+
         // 重置多邊形繪製狀態
         resetPolygonDrawing();
         // 多邊形選區也可點擊高亮列表
@@ -864,28 +864,28 @@ document.addEventListener('DOMContentLoaded', function() {
             highlightListItem(polyId, 'green');
         });
     }
-    
+
     // 重置多邊形繪製狀態
     function resetPolygonDrawing() {
         isDrawingPolygon = false;
         polygonPoints = [];
         isNearFirstPoint = false;
         isShowingCloseConfirm = false;
-        
+
         // 清除第一個點的高亮效果
         if (firstPointHighlight) {
             firstPointHighlight.style.display = 'none';
             firstPointHighlight = null;
         }
-        
+
         // 清除可能存在的未完成多邊形
         if (currentPolygonElement && currentPolygonElement.parentNode) {
             currentPolygonElement.parentNode.removeChild(currentPolygonElement);
         }
-        
+
         currentPolygonElement = null;
         temporaryLine = null;
-        
+
         // 移除多邊形模式指示
         imageContainer.classList.remove('polygon-active');
     }
@@ -893,24 +893,24 @@ document.addEventListener('DOMContentLoaded', function() {
     // 繪製選擇區域
     imageContainer.addEventListener('mousemove', function(e) {
         if (!uploadedImage.src) return;
-        
+
         const rect = imageContainer.getBoundingClientRect();
         const offsetX = e.clientX - rect.left;
         const offsetY = e.clientY - rect.top;
-        
+
         // 處理多邊形繪製中的鼠標移動
         if (isDrawingPolygon) {
             handlePolygonMouseMove(e);
             return;
         }
-        
+
         // 調整大小處理
         if (isResizing && resizeHandle && selectedElement) {
             e.preventDefault();
-            
+
             const selectionRect = selectedElement.getBoundingClientRect();
             let newWidth, newHeight, newLeft, newTop;
-            
+
             // 根據不同的調整把手計算新的尺寸和位置
             if (resizeHandle.classList.contains('se')) {
                 newWidth = offsetX - parseInt(selectedElement.style.left);
@@ -933,73 +933,73 @@ document.addEventListener('DOMContentLoaded', function() {
                 newLeft = offsetX;
                 newTop = offsetY;
             }
-            
+
             // 確保最小尺寸
             newWidth = Math.max(20, newWidth);
             newHeight = Math.max(20, newHeight);
-            
+
             // 如果是圓形，保持寬高一致
             if (selectedElement.classList.contains('circular')) {
                 const size = Math.max(newWidth, newHeight);
                 newWidth = size;
                 newHeight = size;
             }
-            
+
             // 更新選區尺寸和位置
             selectedElement.style.width = newWidth + 'px';
             selectedElement.style.height = newHeight + 'px';
             selectedElement.style.left = newLeft + 'px';
             selectedElement.style.top = newTop + 'px';
-            
+
             return;
         }
-        
+
         // 拖動處理
         if (selectedElement && !isDrawing) {
             e.preventDefault();
-            
+
             const deltaX = e.clientX - startX;
             const deltaY = e.clientY - startY;
-            
+
             const left = parseInt(selectedElement.style.left) || 0;
             const top = parseInt(selectedElement.style.top) || 0;
-            
+
             selectedElement.style.left = (left + deltaX) + 'px';
             selectedElement.style.top = (top + deltaY) + 'px';
-            
+
             startX = e.clientX;
             startY = e.clientY;
-            
+
             return;
         }
-        
+
         // 繪製新選區
         if (isDrawing && selectedElement) {
             e.preventDefault();
-            
+
             let width = offsetX - startX;
             let height = offsetY - startY;
             let left = startX;
             let top = startY;
-            
+
             // 處理負值情況
             if (width < 0) {
                 width = Math.abs(width);
                 left = offsetX;
             }
-            
+
             if (height < 0) {
                 height = Math.abs(height);
                 top = offsetY;
             }
-            
+
             // 如果是圓形，保持寬高一致
             if (currentShape === 'circle') {
                 const size = Math.max(width, height);
                 width = size;
                 height = size;
             }
-            
+
             selectedElement.style.width = width + 'px';
             selectedElement.style.height = height + 'px';
             selectedElement.style.left = left + 'px';
@@ -1011,10 +1011,10 @@ document.addEventListener('DOMContentLoaded', function() {
     imageContainer.addEventListener('mouseup', function() {
         if (isDrawing) {
             isDrawing = false;
-            
+
             // 如果選區太小，則刪除它
             if (
-                parseInt(selectedElement.style.width) < 20 || 
+                parseInt(selectedElement.style.width) < 20 ||
                 parseInt(selectedElement.style.height) < 20
             ) {
                 selectionsContainer.removeChild(selectedElement);
@@ -1022,25 +1022,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 // 使用 selId 作為選區名稱和 id
                 const id = selectedElement.id;
                 const shape = selectedElement.classList.contains('circular') ? 'circle' : 'rectangle';
-                
+
                 const imgRect = uploadedImage.getBoundingClientRect();
                 const containerRect = imageContainer.getBoundingClientRect();
-                
+
                 const imgOffsetLeft = imgRect.left - containerRect.left;
                 const imgOffsetTop = imgRect.top - containerRect.top;
-                
+
                 // 計算相對於圖片的位置比例
                 const left = parseInt(selectedElement.style.left);
                 const top = parseInt(selectedElement.style.top);
                 const width = parseInt(selectedElement.style.width);
                 const height = parseInt(selectedElement.style.height);
-                
+
                 // 轉換為相對於圖片的百分比
                 const relativeLeft = (left - imgOffsetLeft) / imgRect.width;
                 const relativeTop = (top - imgOffsetTop) / imgRect.height;
                 const relativeWidth = width / imgRect.width;
                 const relativeHeight = height / imgRect.height;
-                
+
                 selections.push({
                     id: id,
                     name: id,
@@ -1051,17 +1051,17 @@ document.addEventListener('DOMContentLoaded', function() {
                     height: relativeHeight,
                     elementRef: selectedElement
                 });
-                
+
                 updateSelectionsList();
             }
-            
+
             selectedElement = null;
             imageContainer.classList.remove('drawing');
         } else if (isResizing) {
             isResizing = false;
             resizeHandle = null;
             document.body.classList.remove('resizing');
-            
+
             // 更新選區數據
             updateSelectionData(selectedElement);
         } else if (selectedElement) {
@@ -1071,30 +1071,30 @@ document.addEventListener('DOMContentLoaded', function() {
             document.body.classList.remove('dragging');
         }
     });
-    
+
     // 預覽按鈕功能
     previewBtn.addEventListener('click', function() {
         if (!uploadedImage.src || selections.length === 0) {
             alert('請先上傳圖片並創建至少一個圈選區域');
             return;
         }
-        
+
         // 顯示預覽容器
         previewContainer.classList.remove('hidden');
-        
+
         // 設置預覽圖片
         previewImage.src = uploadedImage.src;
-        
+
         // 等待圖片加載完成後再添加選區
         previewImage.onload = function() {
             updatePreview();
         };
-        
+
         // 如果圖片已經加載，直接更新預覽
         if (previewImage.complete) {
             updatePreview();
         }
-        
+
         // 滾動到預覽區域
         previewContainer.scrollIntoView({ behavior: 'smooth' });
     });
@@ -1103,31 +1103,31 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateSelectionData(element) {
         const id = element.id;
         const selectionIndex = selections.findIndex(sel => sel.id === id);
-        
+
         if (selectionIndex !== -1) {
             const imgRect = uploadedImage.getBoundingClientRect();
             const containerRect = imageContainer.getBoundingClientRect();
-            
+
             const imgOffsetLeft = imgRect.left - containerRect.left;
             const imgOffsetTop = imgRect.top - containerRect.top;
-            
+
             // 計算相對於圖片的位置比例
             const left = parseInt(element.style.left);
             const top = parseInt(element.style.top);
             const width = parseInt(element.style.width);
             const height = parseInt(element.style.height);
-            
+
             // 轉換為相對於圖片的百分比
             const relativeLeft = (left - imgOffsetLeft) / imgRect.width;
             const relativeTop = (top - imgOffsetTop) / imgRect.height;
             const relativeWidth = width / imgRect.width;
             const relativeHeight = height / imgRect.height;
-            
+
             selections[selectionIndex].left = relativeLeft;
             selections[selectionIndex].top = relativeTop;
             selections[selectionIndex].width = relativeWidth;
             selections[selectionIndex].height = relativeHeight;
-            
+
             updateSelectionsList();
         }
     }
@@ -1136,7 +1136,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function deleteSelectionInternal(element) {
         const id = element.id;
         const index = selections.findIndex(sel => sel.id === id);
-        
+
         if (index !== -1) {
             selections.splice(index, 1);
             selectionsContainer.removeChild(element);
@@ -1286,14 +1286,14 @@ document.addEventListener('DOMContentLoaded', function() {
             selectionsList.innerHTML = '';
             return;
         }
-        
+
         noSelectionsText.classList.add('hidden');
         selectionsList.innerHTML = selections.map(selection => {
             const percentLeft = (selection.left * 100).toFixed(2);
             const percentTop = (selection.top * 100).toFixed(2);
             const percentWidth = (selection.width * 100).toFixed(2);
             const percentHeight = (selection.height * 100).toFixed(2);
-            
+
             return `
                 <div id="list-${selection.id}" class="selection-item bg-white p-4 rounded-lg shadow mb-4">
                     <div class="flex justify-between items-start">
@@ -1305,7 +1305,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             </p>
                             ${selection.description ? `<p class="text-sm text-gray-800 mt-2">說明: ${selection.description}</p>` : ''}
                         </div>
-       
+
                     </div>
                                      <div class="flex space-x-2">
                             <button onclick="editId('${selection.id}')" class="px-3 py-1 bg-gray-500 text-white rounded hover:bg-gray-600 text-sm">ID編輯</button>
@@ -1323,31 +1323,31 @@ document.addEventListener('DOMContentLoaded', function() {
                 </div>
             `;
         }).join('');
-        
+
         updateOutputResult();
-        
+
         // 如果預覽已經顯示，更新預覽
         if (!previewContainer.classList.contains('hidden') && previewImage.src) {
             updatePreview();
         }
     }
-    
+
     // 專門用於更新預覽的函數
     function updatePreview() {
         // 清空現有的預覽選擇區
         while (previewSelections.firstChild) {
             previewSelections.removeChild(previewSelections.firstChild);
         }
-        
+
         // 設置預覽圖像
         previewImage.src = uploadedImage.src;
-        
+
         // 創建選區預覽元素
         selections.forEach(selection => {
             const previewElement = document.createElement('div');
             previewElement.id = selection.name + '-preview';
             previewElement.className = 'preview-selection';
-            
+
             // 設置基本樣式
             previewElement.style.position = 'absolute';
             previewElement.style.left = (selection.left * 100) + '%';
@@ -1356,7 +1356,7 @@ document.addEventListener('DOMContentLoaded', function() {
             previewElement.style.height = (selection.height * 100) + '%';
             previewElement.style.backgroundColor = 'rgba(0, 123, 255, 0.3)';
             previewElement.style.cursor = 'pointer';
-            
+
             // 設置形狀特定的樣式
             if (selection.shape === 'circle') {
                 previewElement.style.borderRadius = '50%';
@@ -1369,21 +1369,21 @@ document.addEventListener('DOMContentLoaded', function() {
                     console.error('Error setting clip-path:', e);
                 }
             }
-            
+
             // 添加懸停效果
             previewElement.addEventListener('mouseover', function() {
                 this.style.backgroundColor = 'rgba(0, 123, 255, 0.5)';
             });
-            
+
             previewElement.addEventListener('mouseout', function() {
                 this.style.backgroundColor = 'rgba(0, 123, 255, 0.3)';
             });
-            
+
             // 添加點擊效果
             previewElement.addEventListener('click', function() {
                 handleSelectionAction(selection.id);
             });
-            
+
             previewSelections.appendChild(previewElement);
         });
     }
@@ -1392,18 +1392,18 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateOutputResult() {
         if (selections.length === 0) {
             outputResult.textContent = '尚無選區';
-            
+
             // 如果有預覽內容，也清空預覽
             if (!previewContainer.classList.contains('hidden')) {
                 previewSelections.innerHTML = '';
             }
-            
+
             return;
         }
-        
+
         const { htmlCode, jsCode } = generateSelectionCode();
         outputResult.textContent = htmlCode + jsCode;
-        
+
         // 如果預覽已經開啟，更新預覽內容
         if (!previewContainer.classList.contains('hidden') && previewImage.src) {
             updatePreview();
@@ -1413,22 +1413,22 @@ document.addEventListener('DOMContentLoaded', function() {
     // 處理窗口調整大小時重新計算選區位置
     window.addEventListener('resize', function() {
         if (!uploadedImage.src || selections.length === 0) return;
-        
+
         const imgRect = uploadedImage.getBoundingClientRect();
         const containerRect = imageContainer.getBoundingClientRect();
-        
+
         const imgOffsetLeft = imgRect.left - containerRect.left;
         const imgOffsetTop = imgRect.top - containerRect.top;
-        
+
         selections.forEach(selection => {
             const element = selection.elementRef;
-            
+
             // 重新計算絕對位置
             const left = imgOffsetLeft + (selection.left * imgRect.width);
             const top = imgOffsetTop + (selection.top * imgRect.height);
             const width = selection.width * imgRect.width;
             const height = selection.height * imgRect.height;
-            
+
             element.style.left = left + 'px';
             element.style.top = top + 'px';
             element.style.width = width + 'px';
@@ -1478,7 +1478,7 @@ document.addEventListener('DOMContentLoaded', function() {
             maximizeBtn.innerHTML = '<i class="fas fa-compress mr-2"></i>恢復';
             maximizeBtn.setAttribute('data-tooltip', '恢復原始尺寸');
         }
-        
+
         // 更新選區位置（因為圖片尺寸變化）
         selections.forEach(selection => {
             const element = document.getElementById(selection.id);
@@ -1626,5 +1626,54 @@ document.addEventListener('DOMContentLoaded', function() {
 </body>
 </html>`;
         return html;
+    }
+
+    document.getElementById('aiRecognitionBtn').addEventListener('click', async () => {
+        const selections = getSelectedAreas(); // 假設這個函數能獲取選取的區域
+        const textToRecognize = await getTextFromSelections(selections);
+
+        // 呼叫 OpenAI API
+        const recognizedText = await callOpenAIAPI(textToRecognize);
+
+        // 顯示識別結果
+        displayRecognitionResult(recognizedText);
+    });
+
+    // 獲取選取區域的文字
+    async function getTextFromSelections(selections) {
+        let combinedText = '';
+        selections.forEach(selection => {
+            combinedText += selection.text + ' '; // 假設每個選取區域都有一個 text 屬性
+        });
+        return combinedText.trim();
+    }
+
+    // 呼叫 OpenAI API
+    async function callOpenAIAPI(text) {
+        const apiKey = 'your_api_key_here'; // 不建議這樣做，應使用後端代理
+        const response = await fetch('YOUR_OPENAI_API_ENDPOINT', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${apiKey}`
+            },
+            body: JSON.stringify({
+                prompt: text,
+                max_tokens: 100 // 根據需要調整
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        return data.choices[0].text; // 根據 API 回應格式調整
+    }
+
+    // 顯示識別結果
+    function displayRecognitionResult(result) {
+        const recognizedTextDiv = document.getElementById('recognizedText');
+        recognizedTextDiv.innerText = result; // 將識別結果顯示在指定區域
     }
 });
